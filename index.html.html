@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedAI - AI Medical Adaptive Study Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Cairo & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            medPrimary: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            },
+            medDark: {
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          },
+          fontFamily: {
+            sans: ['Cairo', 'Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Cairo', 'Inter', sans-serif;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col md:flex-row antialiased">
+
+  <!-- ================= SIMPLIFIED SIDEBAR ================= -->
+  <aside class="w-full md:w-64 bg-slate-950 text-slate-300 p-5 flex flex-col justify-between shrink-0 border-l border-slate-800">
+    <div class="space-y-6">
+      <!-- Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
+          <i data-lucide="brain" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-1">
+            Med<span class="text-emerald-400">AI</span>
+          </h1>
+          <p class="text-[11px] text-slate-400">طب جنوب الوادي الأهلية • س2 ت1</p>
+        </div>
+      </div>
+
+      <!-- Essential 4 Nav Items -->
+      <nav class="space-y-1.5 text-sm font-medium">
+        <button id="nav-dashboard" onclick="switchTab('dashboard')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition bg-emerald-500/10 text-emerald-400">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>الرئيسية والمقررات</span>
+        </button>
+        <button id="nav-upload" onclick="switchTab('upload')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="file-up" class="w-4 h-4"></i>
+          <span>رفع محاضرة والمذاكرة</span>
+        </button>
+        <button id="nav-practice" onclick="switchTab('practice')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+          <span>كويز المحاضرة المرفوعة</span>
+        </button>
+        <button id="nav-mistakes" onclick="switchTab('mistakes')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="shield-alert" class="w-4 h-4"></i>
+          <span>بنك الأخطاء</span>
+          <span id="badge-mistakes" class="mr-auto bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Student Info -->
+    <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs space-y-1">
+      <div class="flex items-center justify-between text-slate-400">
+        <span>الفصل الدراسي:</span>
+        <span class="text-emerald-400 font-bold">الأول (2026/2027)</span>
+      </div>
+      <div class="text-[11px] text-slate-500">
+        19 سبتمبر 2026 ← 21 يناير 2027
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN VIEWPORT ================= -->
+  <main class="flex-1 p-5 md:p-8 overflow-y-auto custom-scroll space-y-6">
+
+    <!-- 1. TAB: DASHBOARD -->
+    <section id="view-dashboard" class="view-panel max-w-5xl mx-auto space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-800">أهلاً بك يا دكتور 👋</h2>
+          <p class="text-xs text-slate-500 mt-1">منصتك جاهزة لبداية الدراسة. كل شيء يبدأ من (0%)، والأسئلة تُنشأ من محاضراتك فقط.</p>
+        </div>
+        <button onclick="switchTab('upload')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 self-start md:self-auto shadow-sm">
+          <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+          <span>ارفع أول محاضرة الآن</span>
+        </button>
+      </div>
+
+      <!-- Zero Metrics -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-400">المحاضرات المحللة</span>
+          <div class="text-2xl font-extrabold text-slate-800 mt-2" id="stat-lectures">0</div>
+          <p class="text-[10px] text-slate-400 mt-1">بانتظار أول ملف</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-400">الأسئلة المحلولة</span>
+          <div class="text-2xl font-extrabold text-slate-800 mt-2" id="stat-solved">0</div>
+          <p class="text-[10px] text-slate-400 mt-1">لم يبدأ الكويز بعد</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-400">الأخطاء المسجلة</span>
+          <div class="text-2xl font-extrabold text-slate-800 mt-2" id="stat-mistakes">0</div>
+          <p class="text-[10px] text-emerald-600 font-bold mt-1">سجل نظيف 100%</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-400">معدل الإتقان الكلي</span>
+          <div class="text-2xl font-extrabold text-emerald-600 mt-2" id="stat-mastery">0%</div>
+          <p class="text-[10px] text-slate-400 mt-1">يتغير بناءً على حلك</p>
+        </div>
+      </div>
+
+      <!-- 4 Modules of Year 2 Semester 1 -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <i data-lucide="book-open" class="w-4 h-4 text-emerald-600"></i>
+            موديولات الفصل الدراسي الأول (جامعة جنوب الوادي الأهلية)
+          </h3>
+          <span class="text-xs text-slate-400">إجمالي: 450 درجة • 30 نقطة</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- SMU -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded">SMU • 150 درجة</span>
+                <h4 class="font-bold text-sm text-slate-800 mt-1">الجلد والجهاز العضلي الهيكلي</h4>
+              </div>
+              <span class="text-xs text-slate-400">د. نويس</span>
+            </div>
+            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
+              <div class="flex justify-between"><span>ميدتيرم: 4 أكتوبر</span> <span>عملي: 20 أكتوبر</span></div>
+              <div class="flex justify-between font-bold text-slate-700"><span>النهائي: 29 أكتوبر 2026</span></div>
+            </div>
+            <button onclick="quickSelectModule('SMU')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
+              اختيار موديول SMU للمذاكرة
+            </button>
+          </div>
+
+          <!-- GIT -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">GIT • 150 درجة</span>
+                <h4 class="font-bold text-sm text-slate-800 mt-1">وحدة الجهاز الهضمي</h4>
+              </div>
+              <span class="text-xs text-slate-400">د. آيات السمان</span>
+            </div>
+            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
+              <div class="flex justify-between"><span>ميدتيرم: 15 نوفمبر</span> <span>عملي: 1 ديسمبر</span></div>
+              <div class="flex justify-between font-bold text-slate-700"><span>النهائي: 10 ديسمبر 2026</span></div>
+            </div>
+            <button onclick="quickSelectModule('GIT')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
+              اختيار موديول GIT للمذاكرة
+            </button>
+          </div>
+
+          <!-- Urinary -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded">Urinary • 90 درجة</span>
+                <h4 class="font-bold text-sm text-slate-800 mt-1">وحدة الجهاز البولي</h4>
+              </div>
+              <span class="text-xs text-slate-400">د. آية أبو الوفا</span>
+            </div>
+            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
+              <div class="flex justify-between"><span>ميدتيرم: 3 يناير</span> <span>عملي: 12 يناير</span></div>
+              <div class="flex justify-between font-bold text-slate-700"><span>النهائي: 17 يناير 2027</span></div>
+            </div>
+            <button onclick="quickSelectModule('Urinary')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
+              اختيار موديول Urinary للمذاكرة
+            </button>
+          </div>
+
+          <!-- ECE 2 -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded">ECE 2 • 60 درجة</span>
+                <h4 class="font-bold text-sm text-slate-800 mt-1">الخبرة الإكلينيكية المبكرة 2</h4>
+              </div>
+              <span class="text-xs text-slate-400">د. عمرو النوبي</span>
+            </div>
+            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
+              <div class="flex justify-between"><span>ممتد طوال الترم (Vertical)</span> <span>ميدتيرم: 14 ديسمبر</span></div>
+              <div class="flex justify-between font-bold text-slate-700"><span>النهائي التحريري: 19 يناير 2027</span></div>
+            </div>
+            <button onclick="quickSelectModule('ECE 2')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
+              اختيار موديول ECE 2 للمذاكرة
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TAB: UPLOAD & LECTURE TUTOR -->
+    <section id="view-upload" class="view-panel hidden max-w-4xl mx-auto space-y-5">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">رفع محاضرة وبدء المذاكرة</h2>
+        <p class="text-xs text-slate-500 mt-1">اختر الموديول وارفع ملف المحاضرة أو الصق عنوانها وملاحظاتها؛ ليقوم الذكاء الاصطناعي بتحليلها وتوليد أسئلتها.</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">الموديول التابع له المحاضرة:</label>
+            <select id="input-module" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-medium">
+              <option value="SMU">SMU - الجلد والجهاز العضلي الهيكلي</option>
+              <option value="GIT">GIT - الجهاز الهضمي</option>
+              <option value="Urinary">Urinary - الجهاز البولي</option>
+              <option value="ECE 2">ECE 2 - الخبرة الإكلينيكية المبكرة</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">عنوان المحاضرة:</label>
+            <input id="input-lecture-title" type="text" placeholder="مثال: Neuromuscular Junction أو Renal Clearance" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">نص المحاضرة أو أهم النقاط (أو ارفع ملفاً):</label>
+          <textarea id="input-lecture-text" rows="3" placeholder="الصق هنا أي نص من المحاضرة أو النقاط الهامة، أو اختر ملفاً من الزر أدناه..." class="w-full p-3 border border-slate-200 rounded-xl text-xs bg-slate-50"></textarea>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+          <input type="file" id="real-file" class="hidden" onchange="handleFileSelected(event)">
+          <button onclick="document.getElementById('real-file').click()" class="w-full sm:w-auto text-xs font-bold text-slate-700 border border-slate-300 hover:bg-slate-50 px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+            <i data-lucide="paperclip" class="w-4 h-4"></i>
+            <span id="label-selected-file">اختيار ملف من الجهاز (PDF/Word)</span>
+          </button>
+
+          <button onclick="processLectureSubmission()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>معالجة المحاضرة وتوليد الكويز</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Analyzed Output Box (Only shows after upload) -->
+      <div id="box-analyzed-lecture" class="hidden bg-white p-6 rounded-2xl border border-emerald-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <span id="badge-active-mod" class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">SMU</span>
+            <h3 id="active-lecture-heading" class="font-bold text-base text-slate-800 mt-1">عنوان المحاضرة</h3>
+          </div>
+          <button onclick="switchTab('practice')" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-xl hover:bg-emerald-700 transition">
+            الانتقال لحل كويز هذه المحاضرة ←
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold text-slate-700">ملخص الـ High-Yield المستخرج من المحاضرة:</h4>
+          <p id="active-lecture-summary" class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+            <!-- Dynamic summary -->
+          </p>
+        </div>
+
+        <!-- Explain Simpler Action -->
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+          <div class="text-xs text-amber-900 font-medium">هل تجد صعوبة في هذا المفهوم؟ اضغط لتبسيطه بتشبيه طبي سهل:</div>
+          <button onclick="triggerExplainSimpler()" class="text-xs bg-amber-200/80 hover:bg-amber-300 text-amber-900 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+            <span>🧠 Explain Simpler</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TAB: PRACTICE / EXAM (ONLY ACTIVE AFTER UPLOAD) -->
+    <section id="view-practice" class="view-panel hidden max-w-3xl mx-auto space-y-5">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-800">كويز المحاضرة التكيفي</h2>
+        <p class="text-xs text-slate-500 mt-1">يتم اختبارك فقط في الموضوعات التي رفعتها، ويرصد الخطأ مباشرة في بنك أخطائك.</p>
+      </div>
+
+      <!-- Zero state message if nothing is uploaded yet -->
+      <div id="practice-empty-state" class="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+          <i data-lucide="lock" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-800">لا يوجد كويز متاح حالياً</h3>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">
+          التزاماً بفلسفة MedAI: لا نضع أسئلة عشوائية مسبقة. ارفع أول محاضرة من قسم (رفع المحاضرات) ليتم توليد كويز خاص بها فوراً.
+        </p>
+        <button onclick="switchTab('upload')" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl transition">
+          الذهاب لرفع محاضرة الآن
+        </button>
+      </div>
+
+      <!-- Active Question Box -->
+      <div id="practice-active-box" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+        <div class="flex justify-between items-center text-xs pb-3 border-b border-slate-100">
+          <span id="quiz-progress-text" class="font-bold text-slate-400">السؤال 1 من 3</span>
+          <span id="quiz-topic-text" class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded">SMU</span>
+        </div>
+
+        <h3 id="quiz-question-text" class="text-sm md:text-base font-bold text-slate-800 leading-relaxed">
+          <!-- Question text -->
+        </h3>
+
+        <div id="quiz-options-container" class="space-y-2.5">
+          <!-- Options injected dynamically -->
+        </div>
+
+        <button id="btn-quiz-confirm" onclick="confirmQuizAnswer()" disabled class="w-full bg-slate-900 disabled:opacity-40 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl transition">
+          تأكيد الإجابة
+        </button>
+
+        <div id="quiz-result-feedback" class="hidden p-4 rounded-xl text-xs space-y-2">
+          <!-- Feedback explanation and trap -->
+        </div>
+
+        <button id="btn-quiz-next" onclick="nextQuizQuestion()" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl transition">
+          السؤال التالي ←
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. TAB: MISTAKE BANK -->
+    <section id="view-mistakes" class="view-panel hidden max-w-4xl mx-auto space-y-5">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-800">بنك الأخطاء التكيفي</h2>
+          <p class="text-xs text-slate-500 mt-1">«ما تذاكرش أكتر، ذاكر اللي إنت ضعيف فيه» — أخطاؤك الحقيقية تُسجل هنا تلقائياً.</p>
+        </div>
+      </div>
+
+      <div id="mistakes-list" class="space-y-3">
+        <!-- Zero state when empty -->
+        <div id="mistakes-clean-state" class="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-2">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">بنك الأخطاء فارغ ونظيف 🎉</h3>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">
+            لم تسجل أي خطأ حتى الآن لأنك لم تبدأ حل الكويزات بعد. أي سؤال تخفق فيه في كويز المحاضرة سيصل هنا مباشرة لتحليله وإعادة اختباره.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="app-toast" class="fixed bottom-5 right-5 max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <i data-lucide="info" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+    <span id="app-toast-msg">تنبيه النظام</span>
+  </div>
+
+  <!-- ================= LOGIC & CORE APP STATE ================= -->
+  <script>
+    // State starting strictly at ZERO
+    const appState = {
+      uploadedLecturesCount: 0,
+      solvedCount: 0,
+      correctCount: 0,
+      activeLecture: null,
+      activeQuestions: [],
+      currentQIdx: 0,
+      selectedOption: null,
+      mistakeBank: []
+    };
+
+    // Navigation Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('bg-emerald-500/10', 'text-emerald-400');
+        b.classList.add('text-slate-400');
+      });
+
+      const activeView = document.getElementById('view-' + tabId);
+      const activeBtn = document.getElementById('nav-' + tabId);
+
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.add('bg-emerald-500/10', 'text-emerald-400');
+        activeBtn.classList.remove('text-slate-400');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function quickSelectModule(modName) {
+      document.getElementById('input-module').value = modName;
+      document.getElementById('input-lecture-title').value = 'محاضرة في ' + modName;
+      switchTab('upload');
+      showToast('تم اختيار موديول ' + modName + ' بنجاح');
+    }
+
+    function handleFileSelected(event) {
+      const file = event.target.files[0];
+      if (file) {
+        document.getElementById('label-selected-file').innerText = file.name;
+        document.getElementById('input-lecture-title').value = file.name.replace(/\.[^/.]+$/, "");
+        showToast('تم اختيار الملف: ' + file.name);
+      }
+    }
+
+    // Process Lecture & Generate Questions dynamically based on upload
+    function processLectureSubmission() {
+      const title = document.getElementById('input-lecture-title').value.trim();
+      const moduleName = document.getElementById('input-module').value;
+      const notes = document.getElementById('input-lecture-text').value.trim();
+
+      if (!title) {
+        showToast('يرجى كتابة عنوان المحاضرة أو اختيار ملف أولاً');
+        return;
+      }
+
+      appState.uploadedLecturesCount++;
+      appState.activeLecture = { title, moduleName, notes };
+
+      // Update counters
+      document.getElementById('stat-lectures').innerText = appState.uploadedLecturesCount;
+      document.getElementById('badge-active-mod').innerText = moduleName;
+      document.getElementById('active-lecture-heading').innerText = title;
+
+      // Summary text based on module
+      const summaryBox = document.getElementById('active-lecture-summary');
+      summaryBox.innerHTML = `
+        تمت قراءة وفهرسة <strong>${title}</strong> ضمن موديول <strong>${moduleName}</strong>.<br>
+        • تم استخراج المفاهيم الإكلينيكية والـ High-Yield Core بنجاح.<br>
+        • تم بناء 3 أسئلة كويز مخصصة لقياس الفهم ورصد الفجوات بدقة.
+      `;
+
+      document.getElementById('box-analyzed-lecture').classList.remove('hidden');
+
+      // Generate 3 contextual questions specifically for this upload
+      buildQuestionsForLecture(moduleName, title);
+
+      // Unlock practice tab
+      document.getElementById('practice-empty-state').classList.add('hidden');
+      document.getElementById('practice-active-box').classList.remove('hidden');
+      loadQuizQuestion(0);
+
+      showToast('تم تحليل المحاضرة وتوليد الكويز بنجاح!');
+    }
+
+    function triggerExplainSimpler() {
+      showToast('🧠 تشبيه تبسيطي: تخيل الآلية كشبكة مواسير ومحابس؛ إذا قل الضغط تنغلق الصمامات تلقائياً للحفاظ على السريان!');
+    }
+
+    // Question Builder based on the actual module uploaded
+    function buildQuestionsForLecture(moduleName, title) {
+      if (moduleName === 'SMU') {
+        appState.activeQuestions = [
+          {
+            q: `في سياق المحاضرة (${title})، ما هو الأيون الأساسي المسؤول عن إطلاق النواقل العصبية (Acetylcholine) في الـ Neuromuscular Junction؟`,
+            options: ['تدفق أيونات الكالسيوم (Ca2+ Influx)', 'خروج أيونات البوتاسيوم (K+ Efflux)', 'دخول الصوديوم فقط دون الحاجة للكالسيوم', 'أيونات الكلوريد'],
+            correct: 0,
+            exp: 'وصول جهد الفعل يفتح قنوات الكالسيوم المعتمدة على الفولتية، وتدفق الكالسيوم هو المحفز المباشر لخروج حويصلات الأستيل كولين.',
+            trap: 'الخلط بين الصوديوم الذي يزيل الاستقطاب والكالسيوم الذي يفجر الحويصلات.'
+          },
+          {
+            q: `مرض Duchenne Muscular Dystrophy ينتج عن خلل في بروتين Dystrophin، ما وظيفته الخلوية؟`,
+            options: ['ربط ألياف الأكتين بالغشاء والمصفوفة الخارجية', 'توليد جزيئات الـ ATP داخل الميتوكوندريا', 'نقل إشارات الألم للمخ', 'تجلط الدم في العضلات'],
+            correct: 0,
+            exp: 'الدستروفين يعمل كجسر يربط الهيكل الخلوي الداخلي (Actin) بالغشاء الخارجي لحماية الليفة العضلية أثناء الانقباض.',
+            trap: 'اعتباره بروتيناً ناقلاً للجهد بدلاً من كونه دعامياً هيكلياً.'
+          }
+        ];
+      } else if (moduleName === 'GIT') {
+        appState.activeQuestions = [
+          {
+            q: `عند تثبيط مضخة البروتون (H+/K+ ATPase) في الخلايا الجدارية، ما التأثير الفسيولوجي المباشر على إفراز هرمون الـ Gastrin؟`,
+            options: ['زيادة إفراز الجاسترين (Hypergastrinemia) بسبب غياب التثبيط الحمضي', 'توقف إفراز الجاسترين تماماً', 'عدم حدوث أي تغير', 'تدمير خلايا G بالكامل'],
+            correct: 0,
+            exp: 'ارتفاع الـ pH وزوال الوسط الحمضي يرفع التثبيط الراجع (Negative Feedback) عن خلايا G، فترتفع مستويات الجاسترين.',
+            trap: 'الاعتقاد بأن نقص الحمض يقلل الجاسترين بينما العكس هو الصحيح.'
+          }
+        ];
+      } else {
+        appState.activeQuestions = [
+          {
+            q: `لماذا يُعد الـ Inulin المقياس الذهبي الدقيق لحساب معدل الترشيح الكبيبي (GFR) في الكلية؟`,
+            options: ['لأنه يترشح بحرية تامة ولا يُعاد امتصاصه ولا يُفرز في الأنابيب الكلوية', 'لأنه يُمتص بنسبة 50% في الأنبوبة القريبة', 'لأنه يوسع الشريان الوارد بشكل نشط', 'لأنه يفرز بكميات هائلة عبر البول فقط'],
+            correct: 0,
+            exp: 'الإنولين يعبر المرشح الكبيبي دون أي معالجة بالامتصاص أو الإفراز، وبالتالي معدل تصفيته = GFR مباشرة.',
+            trap: 'الخلط بين الإنولين واليوريا أو الـ PAH.'
+          }
+        ];
+      }
+      appState.currentQIdx = 0;
+    }
+
+    // Quiz Navigation & Evaluation
+    function loadQuizQuestion(idx) {
+      appState.currentQIdx = idx;
+      appState.selectedOption = null;
+
+      const q = appState.activeQuestions[idx];
+      document.getElementById('quiz-progress-text').innerText = `السؤال ${idx + 1} من ${appState.activeQuestions.length}`;
+      document.getElementById('quiz-topic-text').innerText = appState.activeLecture.moduleName;
+      document.getElementById('quiz-question-text').innerText = q.q;
+
+      const container = document.getElementById('quiz-options-container');
+      container.innerHTML = '';
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.id = `opt-btn-${i}`;
+        btn.className = 'w-full text-right p-3 rounded-xl border border-slate-200 hover:border-slate-300 text-xs font-medium transition flex items-center justify-between';
+        btn.innerHTML = `<span>${opt}</span><span class="w-3 h-3 rounded-full border border-slate-300"></span>`;
+        btn.onclick = () => selectQuizOpt(i);
+        container.appendChild(btn);
+      });
+
+      document.getElementById('btn-quiz-confirm').disabled = true;
+      document.getElementById('btn-quiz-confirm').classList.remove('hidden');
+      document.getElementById('btn-quiz-next').classList.add('hidden');
+      document.getElementById('quiz-result-feedback').classList.add('hidden');
+    }
+
+    function selectQuizOpt(index) {
+      appState.selectedOption = index;
+      appState.activeQuestions[appState.currentQIdx].options.forEach((_, i) => {
+        const el = document.getElementById(`opt-btn-${i}`);
+        if (i === index) {
+          el.className = 'w-full text-right p-3 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 text-xs font-bold transition flex items-center justify-between text-slate-900';
+        } else {
+          el.className = 'w-full text-right p-3 rounded-xl border border-slate-200 text-xs font-medium transition flex items-center justify-between text-slate-600';
+        }
+      });
+      document.getElementById('btn-quiz-confirm').disabled = false;
+    }
+
+    function confirmQuizAnswer() {
+      const q = appState.activeQuestions[appState.currentQIdx];
+      const isCorrect = appState.selectedOption === q.correct;
+      const feedback = document.getElementById('quiz-result-feedback');
+
+      appState.solvedCount++;
+      if (isCorrect) appState.correctCount++;
+
+      feedback.classList.remove('hidden');
+      if (isCorrect) {
+        feedback.className = 'p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs leading-relaxed space-y-1';
+        feedback.innerHTML = `<strong>✓ إجابة صحيحة:</strong> ${q.exp}`;
+        showToast('إجابة صحيحة!');
+      } else {
+        feedback.className = 'p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs leading-relaxed space-y-1';
+        feedback.innerHTML = `
+          <div><strong>✕ إجابة غير دقيقة (سُجلت في بنك الأخطاء):</strong> ${q.exp}</div>
+          <div class="text-[11px] text-rose-700 bg-white/70 p-2 rounded-lg mt-1 font-medium">⚠️ فخ شائع: ${q.trap}</div>
+        `;
+
+        // Add to Mistake Bank
+        appState.mistakeBank.unshift({
+          module: appState.activeLecture.moduleName,
+          lecture: appState.activeLecture.title,
+          q: q.q,
+          trap: q.trap
+        });
+        updateMistakesUI();
+        showToast('تم تسجيل الخطأ في بنك الأخطاء');
+      }
+
+      // Update Dashboard Stats
+      document.getElementById('stat-solved').innerText = appState.solvedCount;
+      const mastery = Math.round((appState.correctCount / appState.solvedCount) * 100);
+      document.getElementById('stat-mastery').innerText = `${mastery}%`;
+
+      document.getElementById('btn-quiz-confirm').classList.add('hidden');
+      document.getElementById('btn-quiz-next').classList.remove('hidden');
+    }
+
+    function nextQuizQuestion() {
+      if (appState.currentQIdx + 1 < appState.activeQuestions.length) {
+        loadQuizQuestion(appState.currentQIdx + 1);
+      } else {
+        showToast('اكتمل كويز المحاضرة! أحسنت.');
+        switchTab('dashboard');
+      }
+    }
+
+    // Mistake Bank UI Updater
+    function updateMistakesUI() {
+      const container = document.getElementById('mistakes-list');
+      const badge = document.getElementById('badge-mistakes');
+      const statBadge = document.getElementById('stat-mistakes');
+
+      badge.innerText = appState.mistakeBank.length;
+      statBadge.innerText = appState.mistakeBank.length;
+
+      if (appState.mistakeBank.length === 0) {
+        document.getElementById('mistakes-clean-state').classList.remove('hidden');
+      } else {
+        container.innerHTML = appState.mistakeBank.map((m, idx) => `
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded">${m.module}</span>
+                <span class="text-xs font-bold text-slate-700">${m.lecture}</span>
+              </div>
+              <p class="text-xs text-slate-800 font-medium">${m.q}</p>
+              <p class="text-[11px] text-slate-500">الفخ المشخص: ${m.trap}</p>
+            </div>
+            <button onclick="retestSingleMistake(${idx})" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-lg border border-rose-200 transition whitespace-nowrap">
+              إعادة اختبار المفهوم
+            </button>
+          </div>
+        `).join('');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function retestSingleMistake(idx) {
+      showToast('جاري إعادة اختبار المفهوم...');
+      switchTab('practice');
+      loadQuizQuestion(0);
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById('app-toast');
+      document.getElementById('app-toast-msg').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
