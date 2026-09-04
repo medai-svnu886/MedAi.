@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MedAI - AI Medical Adaptive Study Platform</title>
+  <title>MedAI — المنصة الطبية التكيفية الذكية</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
+  <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Google Fonts: Cairo & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -51,618 +51,2635 @@
       background-color: #cbd5e1;
       border-radius: 9999px;
     }
+    .gradient-hero {
+      background: linear-gradient(135deg, #064e3b 0%, #0f172a 100%);
+    }
+    .recording-pulse {
+      animation: pulse-red 1.5s infinite;
+    }
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.08); }
+    }
+    .flashcard-inner {
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .flashcard-flipped {
+      transform: rotateY(180deg);
+    }
+    .flashcard-front, .flashcard-back {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .flashcard-back {
+      transform: rotateY(180deg);
+    }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col md:flex-row antialiased">
+<body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col md:flex-row antialiased">
 
-  <!-- ================= SIMPLIFIED SIDEBAR ================= -->
-  <aside class="w-full md:w-64 bg-slate-950 text-slate-300 p-5 flex flex-col justify-between shrink-0 border-l border-slate-800">
-    <div class="space-y-6">
-      <!-- Brand -->
+  <!-- ================= AUTH MODAL (STRICT 0% ACCOUNT SYSTEM) ================= -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 p-7 space-y-5 text-right max-h-[92vh] overflow-y-auto custom-scroll">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
-          <i data-lucide="brain" class="w-6 h-6"></i>
+        <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-lg shadow-emerald-600/20 shrink-0">
+          <i data-lucide="brain-circuit" class="w-7 h-7"></i>
         </div>
         <div>
-          <h1 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-1">
-            Med<span class="text-emerald-400">AI</span>
-          </h1>
-          <p class="text-[11px] text-slate-400">طب جنوب الوادي الأهلية • س2 ت1</p>
+          <h2 class="text-xl font-black text-slate-900">منصة Med<span class="text-emerald-600">AI</span> الطبية</h2>
+          <p class="text-xs text-slate-500">نظام المذاكرة الذكي التكيفي لطلاب الطب</p>
         </div>
       </div>
 
-      <!-- Essential 4 Nav Items -->
-      <nav class="space-y-1.5 text-sm font-medium">
-        <button id="nav-dashboard" onclick="switchTab('dashboard')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition bg-emerald-500/10 text-emerald-400">
+      <!-- Quick Session Resume (Shown if active student logged in) -->
+      <div id="auth-quick-resume-card" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-emerald-800">حسابك المحفوظ على هذا الجهاز:</span>
+          <span class="text-[10px] bg-emerald-200/70 text-emerald-900 font-bold px-2 py-0.5 rounded-full">جلسة نشطة</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-emerald-600 text-white font-black flex items-center justify-center text-sm shadow-sm shrink-0" id="quick-resume-avatar">
+            د
+          </div>
+          <div class="overflow-hidden flex-1">
+            <h4 class="text-xs font-black text-slate-900 truncate" id="quick-resume-name">د. طالب طب</h4>
+            <p class="text-[11px] text-slate-500 truncate" id="quick-resume-email">student@example.com</p>
+          </div>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="resumeSavedSession()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i data-lucide="log-in" class="w-4 h-4"></i>
+            <span>متابعة الدخول كـ <span id="quick-resume-shortname">طالب</span></span>
+          </button>
+          <button type="button" onclick="hideQuickResume()" class="text-xs bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold px-3 py-2.5 rounded-xl transition">
+            تبديل
+          </button>
+        </div>
+      </div>
+
+      <div class="border-b border-slate-100 pb-2">
+        <h3 id="auth-title" class="text-base font-black text-slate-800">إنشاء حساب طبي جديد (البدء من الصفر 0%)</h3>
+        <p class="text-xs text-slate-500 mt-1">يبدأ حسابك نظيفاً تماماً: 0 محاضرات، 0 أخطاء، ولا يتم افتراض أي بيانات سابقة.</p>
+      </div>
+
+      <!-- Auth Form with Strict Validation -->
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" novalidate class="space-y-4 text-xs">
+        <div id="auth-name-group">
+          <label class="block font-bold text-slate-700 mb-1">الاسم الكامل للطالب:</label>
+          <input id="auth-input-name" type="text" placeholder="مثال: د. أحمد علي" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">البريد الإلكتروني الكامل:</label>
+          <input id="auth-input-email" type="email" oninput="clearAuthValidation()" placeholder="name@example.com (يجب أن يكون عنواناً صحيحاً)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-emerald-500">
+          <p id="email-validation-error" class="text-[11px] text-rose-600 font-bold mt-1.5 hidden flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
+            <span>يرجى كتابة عنوان بريد إلكتروني كامل مثل: student@med.svnu.edu.eg</span>
+          </p>
+        </div>
+
+        <div id="auth-pass-group">
+          <label class="block font-bold text-slate-700 mb-1">كلمة المرور:</label>
+          <input id="auth-input-pass" type="password" oninput="clearAuthValidation()" placeholder="•••••••• (6 خانات على الأقل)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-emerald-500">
+          <p id="pass-validation-error" class="text-[11px] text-rose-600 font-bold mt-1.5 hidden flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
+            <span>كلمة المرور يجب ألا تقل عن 6 خانات.</span>
+          </p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">الفرقة والمقرر:</label>
+          <select id="auth-input-year" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-emerald-500">
+            <option value="year2_sem1">الفرقة الثانية • الفصل الدراسي الأول (SMU, GIT, Urinary, ECE 2)</option>
+            <option value="year1_sem1">الفرقة الأولى • الفصل الدراسي الأول</option>
+            <option value="general">عام • بكالوريوس الطب والجراحة</option>
+          </select>
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-3.5 rounded-xl transition shadow-lg text-xs flex items-center justify-center gap-2 mt-4">
+          <i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i>
+          <span id="auth-submit-text">إنشاء الحساب والبدء من الصفر</span>
+        </button>
+      </form>
+
+      <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+        <span id="auth-switch-prompt">لديك حساب مسجل بالفعل؟</span>
+        <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-emerald-700 font-bold hover:underline">
+          تسجيل الدخول
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GLOBAL SEARCH MODAL (SEARCH ACROSS EVERYTHING) ================= -->
+  <div id="search-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-start justify-center p-4 pt-16 hidden">
+    <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 p-6 space-y-4 text-right">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2 flex-1">
+          <i data-lucide="search" class="w-5 h-5 text-emerald-600"></i>
+          <input id="global-search-input" oninput="executeGlobalSearch()" type="text" placeholder="ابحث في كافة المحاضرات، التسجيلات، الأخطاء، وحالات المرضى..." class="w-full text-sm font-bold bg-transparent outline-none">
+        </div>
+        <button onclick="toggleGlobalSearch()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="search-results-box" class="max-h-80 overflow-y-auto custom-scroll space-y-2 text-xs">
+        <div class="text-center py-8 text-slate-400">
+          <i data-lucide="search" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
+          <p>اكتب مصطلحاً طبياً مثل "Action Potential" أو "SA node" للبحث في كل شيء.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SIDEBAR NAVIGATION ================= -->
+  <aside class="w-full md:w-72 bg-slate-950 text-slate-300 p-5 pt-7 flex flex-col justify-between shrink-0 border-l border-slate-800 shadow-2xl z-40">
+    <div class="space-y-5">
+      <!-- Brand & Student Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black shadow-lg shadow-emerald-500/20">
+            <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-1">
+              Med<span class="text-emerald-400">AI</span>
+              <span class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.5 rounded ml-1 font-mono">v3.0</span>
+            </h1>
+            <p class="text-[10px] text-slate-400">طب وجراحة • جنوب الوادي الأهلية</p>
+          </div>
+        </div>
+
+        <button onclick="toggleGlobalSearch()" title="بحث شامل (Ctrl+K)" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Real Student Profile Card -->
+      <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-400">الطالب الحالي:</span>
+          <span id="user-streak-badge" class="text-slate-400 font-bold flex items-center gap-1 text-[11px]">
+            <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-500"></i> <span id="val-user-streak">0</span> أيام
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0" id="user-avatar-initial">
+            -
+          </div>
+          <div class="overflow-hidden flex-1">
+            <h4 class="text-xs font-black text-white truncate" id="user-display-name">طالب جديد</h4>
+            <p class="text-[10px] text-slate-400 truncate" id="user-display-email">student@med.edu</p>
+          </div>
+          <button onclick="logoutUser()" title="تسجيل الخروج والتبديل" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Grouped Elegantly) -->
+      <nav class="space-y-1 text-xs font-semibold max-h-[50vh] overflow-y-auto custom-scroll pr-1">
+        <div class="text-[10px] text-slate-500 uppercase tracking-wider px-3 pt-1">الرئيسية والمخطط</div>
+        <button id="nav-dashboard" onclick="switchNavTab('dashboard')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition bg-emerald-500/10 text-emerald-400">
           <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-          <span>الرئيسية والمقررات</span>
+          <span>الرئيسية وماذا أذاكر الآن؟</span>
         </button>
-        <button id="nav-upload" onclick="switchTab('upload')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition hover:bg-slate-900 text-slate-400">
-          <i data-lucide="file-up" class="w-4 h-4"></i>
-          <span>رفع محاضرة والمذاكرة</span>
+
+        <button id="nav-timer" onclick="switchNavTab('timer')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="timer" class="w-4 h-4"></i>
+          <span>مؤقت المذاكرة (Study Timer)</span>
         </button>
-        <button id="nav-practice" onclick="switchTab('practice')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition hover:bg-slate-900 text-slate-400">
+
+        <div class="text-[10px] text-slate-500 uppercase tracking-wider px-3 pt-3">المحاضرات والمساعد الذكي</div>
+        <button id="nav-upload" onclick="switchNavTab('upload')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="mic" class="w-4 h-4 text-rose-400"></i>
+          <span>رفع وتفريغ المحاضرات والصوتيات</span>
+          <span id="badge-lectures-count" class="mr-auto text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono">0</span>
+        </button>
+
+        <button id="nav-tutor" onclick="switchNavTab('tutor')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="bot" class="w-4 h-4 text-emerald-400"></i>
+          <span>اسأل MedAI (مرتبط بالمحاضرة)</span>
+        </button>
+
+        <div class="text-[10px] text-slate-500 uppercase tracking-wider px-3 pt-3">الامتحانات والأسئلة</div>
+        <button id="nav-quiz" onclick="switchNavTab('quiz')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
           <i data-lucide="clipboard-check" class="w-4 h-4"></i>
-          <span>كويز المحاضرة المرفوعة</span>
+          <span>امتحان المحاضرة التكيفي</span>
         </button>
-        <button id="nav-mistakes" onclick="switchTab('mistakes')" class="tab-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition hover:bg-slate-900 text-slate-400">
-          <i data-lucide="shield-alert" class="w-4 h-4"></i>
-          <span>بنك الأخطاء</span>
-          <span id="badge-mistakes" class="mr-auto bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+
+        <button id="nav-sim-exam" onclick="switchNavTab('sim-exam')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
+          <span>محاكاة الميدتيرم والفاينل</span>
+        </button>
+
+        <button id="nav-qbank" onclick="switchNavTab('qbank')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="database" class="w-4 h-4"></i>
+          <span>بنك الأسئلة الشامل والتجميعات</span>
+        </button>
+
+        <div class="text-[10px] text-slate-500 uppercase tracking-wider px-3 pt-3">الاسترجاع النشط والحالات</div>
+        <button id="nav-active-recall" onclick="switchNavTab('active-recall')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
+          <span>Active Recall & Explain It</span>
+        </button>
+
+        <button id="nav-flashcards" onclick="switchNavTab('flashcards')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
+          <span>البطاقات الذكية (Spaced Repetition)</span>
+        </button>
+
+        <button id="nav-cases" onclick="switchNavTab('cases')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="stethoscope" class="w-4 h-4 text-emerald-400"></i>
+          <span>محاكي الحالات السريرية (Cases)</span>
+        </button>
+
+        <button id="nav-mistakes" onclick="switchNavTab('mistakes')" class="tab-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl transition hover:bg-slate-900 text-slate-400">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
+          <span>بنك الأخطاء (My Mistakes)</span>
+          <span id="badge-nav-mistakes" class="mr-auto text-[10px] bg-rose-950 text-rose-300 px-2 py-0.5 rounded-full font-bold">0</span>
         </button>
       </nav>
     </div>
 
-    <!-- Student Info -->
-    <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs space-y-1">
+    <!-- Official SVNU Academic Badge Footer -->
+    <div class="pt-4 border-t border-slate-900 space-y-1.5 text-[11px] text-slate-500">
       <div class="flex items-center justify-between text-slate-400">
-        <span>الفصل الدراسي:</span>
-        <span class="text-emerald-400 font-bold">الأول (2026/2027)</span>
+        <span>ميدتيرم SMU القادم:</span>
+        <span class="text-emerald-400 font-bold">4 أكتوبر</span>
       </div>
-      <div class="text-[11px] text-slate-500">
-        19 سبتمبر 2026 ← 21 يناير 2027
-      </div>
+      <p class="text-[10px] text-slate-600 text-center">الخطة الرسمية 2026/2027 • جنوب الوادي الأهلية</p>
     </div>
   </aside>
 
-  <!-- ================= MAIN VIEWPORT ================= -->
+  <!-- ================= MAIN CONTENT VIEWPORT ================= -->
   <main class="flex-1 p-5 md:p-8 overflow-y-auto custom-scroll space-y-6">
 
-    <!-- 1. TAB: DASHBOARD -->
+    <!-- ================= 1. VIEW: DASHBOARD + "WHAT SHOULD I STUDY NOW?" ================= -->
     <section id="view-dashboard" class="view-panel max-w-5xl mx-auto space-y-6">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-4">
-        <div>
-          <h2 class="text-2xl font-bold text-slate-800">أهلاً بك يا دكتور 👋</h2>
-          <p class="text-xs text-slate-500 mt-1">منصتك جاهزة لبداية الدراسة. كل شيء يبدأ من (0%)، والأسئلة تُنشأ من محاضراتك فقط.</p>
+      <!-- Welcome Hero Banner -->
+      <div class="gradient-hero rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="space-y-2 z-10">
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-emerald-300 border border-white/10">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>نظام التكيف الذاتي — «Don't study more. Study what you're weak at»</span>
+          </div>
+          <h2 class="text-2xl md:text-3xl font-black tracking-tight" id="dash-greeting">مرحباً بك 👋</h2>
+          <p class="text-xs md:text-sm text-slate-300 max-w-xl leading-relaxed">
+            المنصة تبدأ معك من الصفر التام؛ كل محاضرة تسجلها أو ترفعها، وكل خطأ ترتكبه يبني تلقائياً خارطة معرفتك ويوجهك للخطوة التالية.
+          </p>
         </div>
-        <button onclick="switchTab('upload')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 self-start md:self-auto shadow-sm">
-          <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-          <span>ارفع أول محاضرة الآن</span>
-        </button>
-      </div>
-
-      <!-- Zero Metrics -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold text-slate-400">المحاضرات المحللة</span>
-          <div class="text-2xl font-extrabold text-slate-800 mt-2" id="stat-lectures">0</div>
-          <p class="text-[10px] text-slate-400 mt-1">بانتظار أول ملف</p>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold text-slate-400">الأسئلة المحلولة</span>
-          <div class="text-2xl font-extrabold text-slate-800 mt-2" id="stat-solved">0</div>
-          <p class="text-[10px] text-slate-400 mt-1">لم يبدأ الكويز بعد</p>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold text-slate-400">الأخطاء المسجلة</span>
-          <div class="text-2xl font-extrabold text-slate-800 mt-2" id="stat-mistakes">0</div>
-          <p class="text-[10px] text-emerald-600 font-bold mt-1">سجل نظيف 100%</p>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span class="text-xs font-bold text-slate-400">معدل الإتقان الكلي</span>
-          <div class="text-2xl font-extrabold text-emerald-600 mt-2" id="stat-mastery">0%</div>
-          <p class="text-[10px] text-slate-400 mt-1">يتغير بناءً على حلك</p>
+        <div class="flex flex-col sm:flex-row items-center gap-3 z-10 shrink-0">
+          <button onclick="switchNavTab('upload')" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs px-5 py-3 rounded-2xl transition shadow-lg flex items-center justify-center gap-2">
+            <i data-lucide="mic" class="w-4 h-4"></i>
+            <span>تسجيل / رفع محاضرة</span>
+          </button>
+          <button onclick="startNextBestAction()" class="w-full sm:w-auto bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-4 py-3 rounded-2xl transition flex items-center justify-center gap-2">
+            <i data-lucide="target" class="w-4 h-4 text-emerald-300"></i>
+            <span>ماذا أذاكر الآن؟</span>
+          </button>
         </div>
       </div>
 
-      <!-- 4 Modules of Year 2 Semester 1 -->
-      <div class="space-y-3">
+      <!-- Feature 15: "What Should I Study Right Now?" (🎯 Your Next Best Action Card) -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black">
+              <i data-lucide="compass" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-black text-slate-900">🎯 ماذا أذاكر الآن؟ (Your Next Best Action)</h3>
+              <p class="text-[11px] text-slate-500">خوارزمية ذكية تحسب وقتك المتاح وترتب أولوياتك تلقائياً بدلاً من الحيرة</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600">الوقت المتاح لديك:</span>
+            <select id="select-available-time" onchange="generateNextBestAction()" class="bg-slate-50 border border-slate-200 text-xs font-bold p-2 rounded-xl focus:outline-none focus:border-emerald-500">
+              <option value="30">30 دقيقة (جلسة سريعة)</option>
+              <option value="45" selected>45 دقيقة (جلسة نموذجية)</option>
+              <option value="60">60 دقيقة (جلسة مكثفة)</option>
+              <option value="90">90 دقيقة (مراجعة كبرى)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="next-action-container" class="space-y-3">
+          <!-- Rendered dynamically based on student activity -->
+        </div>
+      </div>
+
+      <!-- Core Real Metrics Strip (Starts at Zero) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Overall Mastery -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative">
+          <span class="text-xs font-bold text-slate-400 flex items-center justify-between">
+            الإتقان الكلي للمنهج
+            <i data-lucide="award" class="w-4 h-4 text-slate-400"></i>
+          </span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl font-black text-slate-800" id="stat-mastery-val">—</span>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-2" id="stat-mastery-subtitle">لا توجد بيانات كافية للتقييم</p>
+          <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+            <div id="stat-mastery-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Questions Solved & Accuracy -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-400 flex items-center justify-between">
+            الأسئلة المحلولة والدقة
+            <i data-lucide="target" class="w-4 h-4 text-slate-400"></i>
+          </span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl font-black text-slate-800" id="stat-questions-count">0</span>
+            <span class="text-xs text-slate-400 font-medium">سؤال</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-bold mt-2" id="stat-accuracy-rate">دقة الإجابات: —</p>
+        </div>
+
+        <!-- Active Mistakes -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-400 flex items-center justify-between">
+            أخطاء بانتظار المعالجة
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-slate-400"></i>
+          </span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl font-black text-slate-800" id="stat-mistakes-count">0</span>
+            <span class="text-xs text-slate-400 font-medium">مفاهيم</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2">بنك الأخطاء فارغ ونظيف</p>
+        </div>
+
+        <!-- Lectures & Audio -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-400 flex items-center justify-between">
+            المحاضرات والتسجيلات
+            <i data-lucide="mic" class="w-4 h-4 text-slate-400"></i>
+          </span>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span class="text-3xl font-black text-slate-800" id="stat-lectures-count">0</span>
+            <span class="text-xs text-slate-400 font-medium">محاضرة</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2" id="stat-study-time">0 دقيقة وقت مذاكرة</p>
+        </div>
+      </div>
+
+      <!-- Feature 13: Your Knowledge Map (Discipline Breakdown) -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-            <i data-lucide="book-open" class="w-4 h-4 text-emerald-600"></i>
-            موديولات الفصل الدراسي الأول (جامعة جنوب الوادي الأهلية)
+          <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+            <i data-lucide="map" class="w-4 h-4 text-emerald-600"></i>
+            خارطة المعرفة الطبية (Your Knowledge Map)
           </h3>
-          <span class="text-xs text-slate-400">إجمالي: 450 درجة • 30 نقطة</span>
+          <span class="text-[11px] text-slate-400 font-mono">Real Dynamic Diagnosis</span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- SMU -->
-          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="text-[10px] font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded">SMU • 150 درجة</span>
-                <h4 class="font-bold text-sm text-slate-800 mt-1">الجلد والجهاز العضلي الهيكلي</h4>
-              </div>
-              <span class="text-xs text-slate-400">د. نويس</span>
-            </div>
-            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
-              <div class="flex justify-between"><span>ميدتيرم: 4 أكتوبر</span> <span>عملي: 20 أكتوبر</span></div>
-              <div class="flex justify-between font-bold text-slate-700"><span>النهائي: 29 أكتوبر 2026</span></div>
-            </div>
-            <button onclick="quickSelectModule('SMU')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
-              اختيار موديول SMU للمذاكرة
-            </button>
-          </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="knowledge-map-grid">
+          <!-- Injected via JS based on real topics studied -->
+        </div>
+      </div>
 
-          <!-- GIT -->
-          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">GIT • 150 درجة</span>
-                <h4 class="font-bold text-sm text-slate-800 mt-1">وحدة الجهاز الهضمي</h4>
-              </div>
-              <span class="text-xs text-slate-400">د. آيات السمان</span>
-            </div>
-            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
-              <div class="flex justify-between"><span>ميدتيرم: 15 نوفمبر</span> <span>عملي: 1 ديسمبر</span></div>
-              <div class="flex justify-between font-bold text-slate-700"><span>النهائي: 10 ديسمبر 2026</span></div>
-            </div>
-            <button onclick="quickSelectModule('GIT')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
-              اختيار موديول GIT للمذاكرة
-            </button>
+      <!-- Modules Academic Overview (4 Official Modules) -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+              <i data-lucide="graduation-cap" class="w-4 h-4 text-emerald-600"></i>
+              موديولات الفرقة الثانية — الفصل الدراسي الأول 2026/2027
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">تتغير نسب الإتقان عند رفعك لمحاضرات الموديول وحل كويزاتها</p>
           </div>
+        </div>
 
-          <!-- Urinary -->
-          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="text-[10px] font-bold bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded">Urinary • 90 درجة</span>
-                <h4 class="font-bold text-sm text-slate-800 mt-1">وحدة الجهاز البولي</h4>
-              </div>
-              <span class="text-xs text-slate-400">د. آية أبو الوفا</span>
-            </div>
-            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
-              <div class="flex justify-between"><span>ميدتيرم: 3 يناير</span> <span>عملي: 12 يناير</span></div>
-              <div class="flex justify-between font-bold text-slate-700"><span>النهائي: 17 يناير 2027</span></div>
-            </div>
-            <button onclick="quickSelectModule('Urinary')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
-              اختيار موديول Urinary للمذاكرة
-            </button>
-          </div>
-
-          <!-- ECE 2 -->
-          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2.5">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded">ECE 2 • 60 درجة</span>
-                <h4 class="font-bold text-sm text-slate-800 mt-1">الخبرة الإكلينيكية المبكرة 2</h4>
-              </div>
-              <span class="text-xs text-slate-400">د. عمرو النوبي</span>
-            </div>
-            <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg space-y-1">
-              <div class="flex justify-between"><span>ممتد طوال الترم (Vertical)</span> <span>ميدتيرم: 14 ديسمبر</span></div>
-              <div class="flex justify-between font-bold text-slate-700"><span>النهائي التحريري: 19 يناير 2027</span></div>
-            </div>
-            <button onclick="quickSelectModule('ECE 2')" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg transition">
-              اختيار موديول ECE 2 للمذاكرة
-            </button>
-          </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="dash-modules-cards">
+          <!-- Rendered via JS -->
         </div>
       </div>
     </section>
 
-    <!-- 2. TAB: UPLOAD & LECTURE TUTOR -->
-    <section id="view-upload" class="view-panel hidden max-w-4xl mx-auto space-y-5">
+    <!-- ================= 2. VIEW: LECTURE & AUDIO TRANSCRIPTION (UPLOAD / RECORD) ================= -->
+    <section id="view-upload" class="view-panel hidden max-w-5xl mx-auto space-y-6">
       <div>
-        <h2 class="text-2xl font-bold text-slate-800">رفع محاضرة وبدء المذاكرة</h2>
-        <p class="text-xs text-slate-500 mt-1">اختر الموديول وارفع ملف المحاضرة أو الصق عنوانها وملاحظاتها؛ ليقوم الذكاء الاصطناعي بتحليلها وتوليد أسئلتها.</p>
+        <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+          <span>رفع وتفريغ المحاضرات والتسجيلات الصوتية</span>
+          <span class="text-xs font-bold bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+            <i data-lucide="mic" class="w-3.5 h-3.5"></i> Audio & PDF
+          </span>
+        </h2>
+        <p class="text-xs text-slate-500 mt-1">ارفع ملف PDF / PPTX، أو ارفع تسجيلاً صوتياً لمدرج المحاضرة، أو سجل بصوتك الآن ليقوم النظام بتفريغه واستخراج الملخصات والأسئلة فوراً.</p>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <!-- Dual Source Input Card (Files & Live Audio) -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">الموديول التابع له المحاضرة:</label>
-            <select id="input-module" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-medium">
-              <option value="SMU">SMU - الجلد والجهاز العضلي الهيكلي</option>
-              <option value="GIT">GIT - الجهاز الهضمي</option>
-              <option value="Urinary">Urinary - الجهاز البولي</option>
-              <option value="ECE 2">ECE 2 - الخبرة الإكلينيكية المبكرة</option>
+            <label class="block text-xs font-bold text-slate-700 mb-1">الموديول الأكاديمي:</label>
+            <select id="input-upload-mod" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-500">
+              <option value="SMU">SMU — وحدة الجلد والجهاز العضلي الهيكلي (150 درجة)</option>
+              <option value="GIT">GIT — وحدة الجهاز الهضمي (150 درجة)</option>
+              <option value="Urinary">Urinary — وحدة الجهاز البولي (90 درجة)</option>
+              <option value="ECE 2">ECE 2 — الخبرة الإكلينيكية المبكرة (60 درجة)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">المادة (Discipline):</label>
+            <select id="input-upload-discipline" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-emerald-500">
+              <option value="Physiology">Physiology (الفسيولوجي)</option>
+              <option value="Anatomy">Anatomy (التشريح)</option>
+              <option value="Pharmacology">Pharmacology (الفارماكولوجي)</option>
+              <option value="Biochemistry">Biochemistry (الكيمياء الحيوية)</option>
+              <option value="Pathology">Pathology (علم الأمراض)</option>
+              <option value="Clinical">Clinical & Skills (المهارات السريرية)</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">عنوان المحاضرة:</label>
-            <input id="input-lecture-title" type="text" placeholder="مثال: Neuromuscular Junction أو Renal Clearance" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50">
+            <input id="input-upload-title" type="text" placeholder="مثال: Action Potential & Synaptic Transmission" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-emerald-500">
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">نص المحاضرة أو أهم النقاط (أو ارفع ملفاً):</label>
-          <textarea id="input-lecture-text" rows="3" placeholder="الصق هنا أي نص من المحاضرة أو النقاط الهامة، أو اختر ملفاً من الزر أدناه..." class="w-full p-3 border border-slate-200 rounded-xl text-xs bg-slate-50"></textarea>
+        <!-- Audio Recording & File Picker Section -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <!-- Voice Recording Card -->
+          <div class="p-5 rounded-2xl bg-rose-50/60 border border-rose-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-rose-900 flex items-center gap-1.5">
+                <i data-lucide="mic" class="w-4 h-4 text-rose-600"></i>
+                تسجيل صوتي مباشر من المحاضرة
+              </span>
+              <span id="recording-timer" class="text-[11px] font-mono font-bold text-rose-700 hidden">00:00</span>
+            </div>
+            <p class="text-[11px] text-rose-700 leading-relaxed">
+              سجل شرح الدكتور في المدرج أو سجّل شرحك لنفسك، وسيتم تحويل الصوت لكلمات مكتوبة تلقائياً.
+            </p>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btn-toggle-record" onclick="toggleVoiceRecording()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+                <i data-lucide="disc" class="w-4 h-4" id="record-icon"></i>
+                <span id="record-btn-label">بدء التسجيل الآن</span>
+              </button>
+              <span id="recording-status-text" class="text-[10px] text-rose-800 font-bold hidden">جاري الاستماع والتفريغ...</span>
+            </div>
+          </div>
+
+          <!-- Audio / Document File Upload -->
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i>
+              رفع ملف (تسجيل صوتي أو PDF / PPTX)
+            </span>
+            <p class="text-[11px] text-slate-500 leading-relaxed">
+              يدعم تسجيلات الصوت (MP3, WAV, M4A) بالإضافة لملفات الـ PDF وسلايدات الـ PowerPoint.
+            </p>
+            <div class="flex items-center gap-2">
+              <input type="file" id="real-file-picker" class="hidden" accept=".pdf,.pptx,.ppt,.docx,.txt,.mp3,.wav,.m4a,.aac" onchange="onFileSelected(event)">
+              <button type="button" onclick="document.getElementById('real-file-picker').click()" class="text-xs font-bold text-slate-700 border border-slate-300 hover:bg-white bg-slate-100 px-4 py-2.5 rounded-xl transition flex items-center gap-2">
+                <i data-lucide="paperclip" class="w-4 h-4"></i>
+                <span id="label-picked-file">اختيار ملف من جهازك</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-          <input type="file" id="real-file" class="hidden" onchange="handleFileSelected(event)">
-          <button onclick="document.getElementById('real-file').click()" class="w-full sm:w-auto text-xs font-bold text-slate-700 border border-slate-300 hover:bg-slate-50 px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-            <i data-lucide="paperclip" class="w-4 h-4"></i>
-            <span id="label-selected-file">اختيار ملف من الجهاز (PDF/Word)</span>
-          </button>
+        <!-- Lecture Text / Transcription Area -->
+        <div class="space-y-1 pt-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-700">محتوى وتفريغ المحاضرة (Transcript & Notes):</label>
+            <span class="text-[10px] text-slate-400 font-mono">Editable Transcript</span>
+          </div>
+          <textarea id="input-upload-content" rows="6" placeholder="سيظهر هنا التفريغ الصوتي التلقائي للتسجيل، أو الصق محتوى السلايدات والنقاط الهامة للمحاضرة..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-emerald-500 leading-relaxed font-sans"></textarea>
+        </div>
 
-          <button onclick="processLectureSubmission()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-            <span>معالجة المحاضرة وتوليد الكويز</span>
+        <!-- Action Button -->
+        <div class="flex justify-end pt-2">
+          <button type="button" onclick="processUpload()" id="btn-process-upload" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-7 py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md">
+            <i data-lucide="sparkles" class="w-4 h-4 text-emerald-300"></i>
+            <span>معالجة المحاضرة واستخراج الـ High-Yield والكويز</span>
           </button>
         </div>
       </div>
 
-      <!-- Analyzed Output Box (Only shows after upload) -->
-      <div id="box-analyzed-lecture" class="hidden bg-white p-6 rounded-2xl border border-emerald-200 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <!-- Processed Lecture Result Box (Summary Levels, High-Yield, Tables, Clinical) -->
+      <div id="processed-lecture-container" class="hidden bg-white p-6 md:p-8 rounded-3xl border border-emerald-200 shadow-sm space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <span id="badge-active-mod" class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">SMU</span>
-            <h3 id="active-lecture-heading" class="font-bold text-base text-slate-800 mt-1">عنوان المحاضرة</h3>
+            <div class="flex items-center gap-2">
+              <span id="proc-mod-badge" class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">SMU</span>
+              <span id="proc-discipline-badge" class="text-[10px] font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">Physiology</span>
+              <span class="text-[11px] text-slate-400 font-mono" id="proc-date">اليوم</span>
+            </div>
+            <h3 id="proc-title" class="font-black text-lg text-slate-900 mt-1">عنوان المحاضرة</h3>
           </div>
-          <button onclick="switchTab('practice')" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-xl hover:bg-emerald-700 transition">
-            الانتقال لحل كويز هذه المحاضرة ←
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="startLectureExamFromProcessed()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+              <i data-lucide="play" class="w-4 h-4"></i>
+              <span>امتحان هذه المحاضرة</span>
+            </button>
+            <button onclick="openTutorForActive()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+              <i data-lucide="bot" class="w-4 h-4 text-emerald-400"></i>
+              <span>اسأل MedAI</span>
+            </button>
+          </div>
         </div>
 
-        <div class="space-y-2">
-          <h4 class="text-xs font-bold text-slate-700">ملخص الـ High-Yield المستخرج من المحاضرة:</h4>
-          <p id="active-lecture-summary" class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-            <!-- Dynamic summary -->
-          </p>
+        <!-- Feature 1: Multi-Level Summary Selector (Fast / Medium / Detailed) -->
+        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="file-text" class="w-4 h-4 text-emerald-600"></i>
+              ملخص المحاضرة الذكي:
+            </h4>
+            <!-- Summary Level Toggle -->
+            <div class="inline-flex bg-slate-200/80 p-1 rounded-xl text-[10px] font-bold">
+              <button id="btn-sum-fast" onclick="setSummaryLevel('fast')" class="px-2.5 py-1 rounded-lg transition bg-white text-slate-900 shadow-sm">سريع جداً (Quick Blitz)</button>
+              <button id="btn-sum-med" onclick="setSummaryLevel('medium')" class="px-2.5 py-1 rounded-lg transition text-slate-600 hover:text-slate-900">متوسط (Standard)</button>
+              <button id="btn-sum-det" onclick="setSummaryLevel('detailed')" class="px-2.5 py-1 rounded-lg transition text-slate-600 hover:text-slate-900">مفصل (Deep Dive)</button>
+            </div>
+          </div>
+          <div id="summary-content-box" class="text-xs text-slate-700 leading-relaxed">
+            <!-- Rendered via JS -->
+          </div>
         </div>
 
-        <!-- Explain Simpler Action -->
-        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
-          <div class="text-xs text-amber-900 font-medium">هل تجد صعوبة في هذا المفهوم؟ اضغط لتبسيطه بتشبيه طبي سهل:</div>
-          <button onclick="triggerExplainSimpler()" class="text-xs bg-amber-200/80 hover:bg-amber-300 text-amber-900 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
-            <span>🧠 Explain Simpler</span>
-          </button>
+        <!-- High-Yield, Tables, Clinical Correlations & Mnemonics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- High-Yield & Exam Points -->
+          <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2.5">
+            <h4 class="text-xs font-black text-amber-900 flex items-center gap-2">
+              <i data-lucide="target" class="w-4 h-4 text-amber-600"></i>
+              أهم نقاط الامتحان والـ High-Yield Facts:
+            </h4>
+            <div id="proc-high-yield-list" class="text-xs text-amber-950 space-y-2 leading-relaxed">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Clinical Correlations & Mnemonics -->
+          <div class="p-5 rounded-2xl bg-cyan-50/70 border border-cyan-200 space-y-2.5">
+            <h4 class="text-xs font-black text-cyan-900 flex items-center gap-2">
+              <i data-lucide="stethoscope" class="w-4 h-4 text-cyan-600"></i>
+              الربط الإكلينيكي وحيل الحفظ (Mnemonics):
+            </h4>
+            <div id="proc-clinical-list" class="text-xs text-cyan-950 space-y-2 leading-relaxed">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison Table Component -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-black text-slate-800 flex items-center gap-2">
+            <i data-lucide="table" class="w-4 h-4 text-emerald-600"></i>
+            جدول المقارنة والمفاهيم الرئيسية (Key Comparisons):
+          </h4>
+          <div id="proc-comparison-table" class="overflow-x-auto text-xs">
+            <!-- Injected table -->
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- 3. TAB: PRACTICE / EXAM (ONLY ACTIVE AFTER UPLOAD) -->
-    <section id="view-practice" class="view-panel hidden max-w-3xl mx-auto space-y-5">
-      <div>
-        <h2 class="text-2xl font-bold text-slate-800">كويز المحاضرة التكيفي</h2>
-        <p class="text-xs text-slate-500 mt-1">يتم اختبارك فقط في الموضوعات التي رفعتها، ويرصد الخطأ مباشرة في بنك أخطائك.</p>
-      </div>
-
-      <!-- Zero state message if nothing is uploaded yet -->
-      <div id="practice-empty-state" class="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3">
-        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-          <i data-lucide="lock" class="w-6 h-6"></i>
-        </div>
-        <h3 class="text-sm font-bold text-slate-800">لا يوجد كويز متاح حالياً</h3>
-        <p class="text-xs text-slate-400 max-w-sm mx-auto">
-          التزاماً بفلسفة MedAI: لا نضع أسئلة عشوائية مسبقة. ارفع أول محاضرة من قسم (رفع المحاضرات) ليتم توليد كويز خاص بها فوراً.
-        </p>
-        <button onclick="switchTab('upload')" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl transition">
-          الذهاب لرفع محاضرة الآن
-        </button>
-      </div>
-
-      <!-- Active Question Box -->
-      <div id="practice-active-box" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-        <div class="flex justify-between items-center text-xs pb-3 border-b border-slate-100">
-          <span id="quiz-progress-text" class="font-bold text-slate-400">السؤال 1 من 3</span>
-          <span id="quiz-topic-text" class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded">SMU</span>
-        </div>
-
-        <h3 id="quiz-question-text" class="text-sm md:text-base font-bold text-slate-800 leading-relaxed">
-          <!-- Question text -->
+      <!-- Saved Lectures Library -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+          <i data-lucide="library" class="w-4 h-4 text-emerald-600"></i>
+          المحاضرات والتسجيلات المحفوظة في حسابك
         </h3>
-
-        <div id="quiz-options-container" class="space-y-2.5">
-          <!-- Options injected dynamically -->
+        <div id="lectures-library-list" class="space-y-3">
+          <!-- Rendered via JS -->
         </div>
-
-        <button id="btn-quiz-confirm" onclick="confirmQuizAnswer()" disabled class="w-full bg-slate-900 disabled:opacity-40 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl transition">
-          تأكيد الإجابة
-        </button>
-
-        <div id="quiz-result-feedback" class="hidden p-4 rounded-xl text-xs space-y-2">
-          <!-- Feedback explanation and trap -->
-        </div>
-
-        <button id="btn-quiz-next" onclick="nextQuizQuestion()" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl transition">
-          السؤال التالي ←
-        </button>
       </div>
     </section>
 
-    <!-- 4. TAB: MISTAKE BANK -->
-    <section id="view-mistakes" class="view-panel hidden max-w-4xl mx-auto space-y-5">
-      <div class="flex justify-between items-center">
+    <!-- ================= 3. VIEW: ASK MEDAI (LECTURE-GROUNDED AI TUTOR) ================= -->
+    <section id="view-tutor" class="view-panel hidden max-w-4xl mx-auto space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
         <div>
-          <h2 class="text-2xl font-bold text-slate-800">بنك الأخطاء التكيفي</h2>
-          <p class="text-xs text-slate-500 mt-1">«ما تذاكرش أكتر، ذاكر اللي إنت ضعيف فيه» — أخطاؤك الحقيقية تُسجل هنا تلقائياً.</p>
+          <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+            <i data-lucide="bot" class="w-6 h-6 text-emerald-600"></i>
+            اسأل MedAI (المساعد الطبي المعتمد على المحاضرة)
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">يجيب بدقة من صلب محاضراتك المرفوعة، مع ذكر المصدر والسلايد، وبدون تأليف أو هلوسة.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-500">المحاضرة النشطة:</span>
+          <select id="tutor-active-lec-select" onchange="onTutorLecSelectChange()" class="p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold focus:outline-none">
+            <!-- Populated via JS -->
+          </select>
         </div>
       </div>
 
-      <div id="mistakes-list" class="space-y-3">
-        <!-- Zero state when empty -->
-        <div id="mistakes-clean-state" class="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-2">
-          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2">
-            <i data-lucide="shield-check" class="w-6 h-6"></i>
+      <!-- Quick Prompt Pills -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 text-[11px] custom-scroll">
+        <button onclick="askTutorPrompt('explain_simpler')" class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 shrink-0">
+          <span>🧠 Explain Simpler (اشرح كأني أول مرة أدرسه)</span>
+        </button>
+        <button onclick="askTutorPrompt('clinical_example')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl font-bold transition shrink-0">
+          🩺 اديني مثال إكلينيكي حقيقي
+        </button>
+        <button onclick="askTutorPrompt('exam_point')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl font-bold transition shrink-0">
+          🎯 إيه أهم نقطة ممكن تيجي في الامتحان؟
+        </button>
+        <button onclick="askTutorPrompt('compare_concepts')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl font-bold transition shrink-0">
+          ⚖️ قارن بين أهم مفهومين في المحاضرة
+        </button>
+      </div>
+
+      <!-- Interactive Chat Stream Box -->
+      <div class="bg-slate-900 text-slate-100 p-5 rounded-3xl space-y-4 shadow-xl border border-slate-800">
+        <div id="tutor-messages-container" class="space-y-3 max-h-[50vh] overflow-y-auto custom-scroll text-xs pr-1">
+          <div class="flex items-start gap-3 bg-slate-800/80 p-4 rounded-2xl border border-slate-700/60">
+            <div class="w-7 h-7 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center shrink-0 text-xs">AI</div>
+            <div class="leading-relaxed space-y-1">
+              <p class="font-bold text-emerald-400">أهلاً بك يا دكتور!</p>
+              <p class="text-slate-300">أنا المساعد الطبي الخاص بك في منصة MedAI. اسألني عن أي آلية (Mechanism)، أو اطلب شرحاً مبسطاً لأي مفهوم صعب في المحاضرة المحددة أعلاه.</p>
+            </div>
           </div>
-          <h3 class="text-sm font-bold text-slate-800">بنك الأخطاء فارغ ونظيف 🎉</h3>
-          <p class="text-xs text-slate-400 max-w-sm mx-auto">
-            لم تسجل أي خطأ حتى الآن لأنك لم تبدأ حل الكويزات بعد. أي سؤال تخفق فيه في كويز المحاضرة سيصل هنا مباشرة لتحليله وإعادة اختباره.
+        </div>
+
+        <!-- Chat Input Form -->
+        <form onsubmit="handleTutorSubmit(event)" class="flex items-center gap-2 pt-2 border-t border-slate-800">
+          <input id="tutor-user-input" type="text" placeholder="اكتب سؤالك هنا (مثال: اشرحلي خطوة الـ Repolarization بالتفصيل)..." class="flex-1 bg-slate-800 border border-slate-700 text-white rounded-2xl p-3.5 text-xs focus:outline-none focus:border-emerald-500 font-medium">
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black p-3.5 rounded-2xl transition shadow-lg shrink-0 flex items-center gap-1.5 text-xs">
+            <span>إرسال</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= 4. VIEW: LECTURE EXAM MODE (CUSTOMIZED) ================= -->
+    <section id="view-quiz" class="view-panel hidden max-w-3xl mx-auto space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-2xl font-black text-slate-800">امتحان المحاضرة (Exam Mode)</h2>
+            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">يتعلم من أخطائك</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">تحديد عدد الأسئلة ومستوى الصعوبة مع استعراض الإجابة والـ High-Yield وفخ المشتتات بعد كل سؤال.</p>
+        </div>
+      </div>
+
+      <!-- Quiz Setup Screen or Active Question -->
+      <div id="quiz-screen-container">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ================= 5. VIEW: MIDTERM & FINAL SIMULATION ================= -->
+    <section id="view-sim-exam" class="view-panel hidden max-w-4xl mx-auto space-y-6">
+      <div class="border-b border-slate-200 pb-4">
+        <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-6 h-6 text-amber-500"></i>
+          محاكاة امتحانات الميدتيرم والنهائي (Full Exam Simulation)
+        </h2>
+        <p class="text-xs text-slate-500 mt-1">تجربة تحاكي الامتحان الأكاديمي الحقيقي: مؤقت تنازلي، أسئلة عشوائية مجمعة من كافة محاضرات الموديول، بدون تلميحات، وتقييم شامل لمستوى الجاهزية (Readiness Index).</p>
+      </div>
+
+      <div id="sim-exam-container">
+        <!-- Setup or Active Mock Screen rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ================= 6. VIEW: QUESTION BANK & COLLECTIONS ================= -->
+    <section id="view-qbank" class="view-panel hidden max-w-5xl mx-auto space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-800">بنك الأسئلة والتجميعات (Question Bank)</h2>
+          <p class="text-xs text-slate-500 mt-1">تصفية متقدمة حسب الموديول، المادة، الصعوبة، أو تجربة كويز عشوائي 20 سؤالاً.</p>
+        </div>
+        <button onclick="startRandom20Quiz()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm self-start sm:self-auto">
+          <i data-lucide="shuffle" class="w-4 h-4 text-emerald-400"></i>
+          <span>Random 20 Questions</span>
+        </button>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-500">الموديول:</span>
+          <select id="qbank-filter-mod" onchange="filterQBank()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold">
+            <option value="all">كل الموديولات</option>
+            <option value="SMU">SMU</option>
+            <option value="GIT">GIT</option>
+            <option value="Urinary">Urinary</option>
+            <option value="ECE 2">ECE 2</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-500">الصعوبة:</span>
+          <select id="qbank-filter-diff" onchange="filterQBank()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold">
+            <option value="all">الكل</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-500">التصنيف:</span>
+          <select id="qbank-filter-type" onchange="filterQBank()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold">
+            <option value="all">كافة الأسئلة</option>
+            <option value="high_yield">High-Yield Only</option>
+            <option value="clinical">Clinical Cases</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Question List -->
+      <div id="qbank-questions-list" class="space-y-3">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ================= 7. VIEW: ACTIVE RECALL & EXPLAIN IT TO ME ================= -->
+    <section id="view-active-recall" class="view-panel hidden max-w-4xl mx-auto space-y-6">
+      <div class="border-b border-slate-200 pb-4">
+        <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-6 h-6 text-cyan-600"></i>
+          الاسترجاع النشط وتقنية فاينمان (Active Recall & Explain It)
+        </h2>
+        <p class="text-xs text-slate-500 mt-1">بدلاً من إعادة القراءة السلبية؛ اختبر قدرتك على كتابة الشرح بنفسك، وسيقوم الذكاء الاصطناعي بمقارنة ما ذكرته بما نسيته.</p>
+      </div>
+
+      <!-- Two Interaction Modes -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Active Recall Challenges -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+            <h3 class="text-sm font-black text-slate-900">تحدي الاسترجاع السريع (Quick Prompt)</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed" id="active-recall-prompt-text">
+            اضغط على الزر أدناه لتوليد سؤال استرجاع كتابي (مثلاً: اذكر خطوات الـ Mechanism أو قارن بين حالتين).
           </p>
+          <button onclick="generateActiveRecallChallenge()" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            <span>توليد سؤال استرجاع جديد</span>
+          </button>
+        </div>
+
+        <!-- Explain It To Me (Feynman Technique) -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <h3 class="text-sm font-black text-slate-900">🗣️ Explain It To Me (اشرحه لزميلك)</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            اختر مفهوماً طبياً واكتب شرحك له بأسلوبك. سيخبرك النظام بالنقاط الجوهرية التي ذكرتها وما أغفلته.
+          </p>
+          <div class="flex items-center gap-2">
+            <input id="feynman-topic-input" type="text" placeholder="المفهوم (مثال: RAAS System)" class="flex-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Input & AI Feedback Box -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <label class="block text-xs font-bold text-slate-700">اكتب شرحك أو إجابتك هنا بدقة:</label>
+        <textarea id="active-recall-student-input" rows="5" placeholder="اكتب كل ما تتذكره عن هذا المفهوم، مراعياً المصطلحات الطبية بالإنجليزية..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-cyan-500 leading-relaxed"></textarea>
+        
+        <div class="flex justify-end">
+          <button onclick="evaluateActiveRecallAnswer()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-6 py-3 rounded-xl transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
+            <span>تقييم إجابتي وتقديم الـ Feedback</span>
+          </button>
+        </div>
+
+        <!-- Feedback Result Area -->
+        <div id="active-recall-feedback-box" class="hidden p-5 rounded-2xl text-xs space-y-3">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 8. VIEW: SMART FLASHCARDS (SPACED REPETITION) ================= -->
+    <section id="view-flashcards" class="view-panel hidden max-w-3xl mx-auto space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+            <i data-lucide="layers" class="w-6 h-6 text-indigo-600"></i>
+            البطاقات التكرارية الذكية (Smart Flashcards)
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">توليد بطاقات آلية من المحاضرات، وتوزيع مراجعتها وفق خوارزمية Spaced Repetition (Day 0, 1, 3, 7, 14).</p>
+        </div>
+      </div>
+
+      <!-- Flashcard Interactive Container -->
+      <div id="flashcards-screen-container">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ================= 9. VIEW: CLINICAL CASES SIMULATOR ================= -->
+    <section id="view-cases" class="view-panel hidden max-w-3xl mx-auto space-y-6">
+      <div class="border-b border-slate-200 pb-4">
+        <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+          <i data-lucide="stethoscope" class="w-6 h-6 text-emerald-600"></i>
+          محاكي الحالات الإكلينيكية (Interactive Clinical Cases)
+        </h2>
+        <p class="text-xs text-slate-500 mt-1">حالات سريرية حقيقية تتكشف خطوة بخطوة: التاريخ المرضي ➔ الفحص ➔ التحاليل ➔ التشخيص ➔ خطة العلاج.</p>
+      </div>
+
+      <div id="cases-screen-container">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ================= 10. VIEW: MISTAKE BANK ================= -->
+    <section id="view-mistakes" class="view-panel hidden max-w-4xl mx-auto space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-2xl font-black text-slate-800">بنك الأخطاء (My Mistakes)</h2>
+          <p class="text-xs text-slate-500 mt-1">كل خطأ ترتكبه في أي كويز يُحفظ هنا تلقائياً مع تحليل المأزق الشائع (Trap Analysis) ونسبة تكراره.</p>
+        </div>
+        <button onclick="startMistakesPractice()" id="btn-practice-mistakes" class="bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm self-start sm:self-auto">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          <span>Practice My Mistakes (امتحان أخطائي فقط)</span>
+        </button>
+      </div>
+
+      <!-- Mistakes List Container -->
+      <div id="mistakes-container" class="space-y-3">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ================= 11. VIEW: STUDY TIMER (FEATURE 14) ================= -->
+    <section id="view-timer" class="view-panel hidden max-w-2xl mx-auto space-y-6">
+      <div class="border-b border-slate-200 pb-4">
+        <h2 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+          <i data-lucide="timer" class="w-6 h-6 text-emerald-600"></i>
+          مؤقت جلسة المذاكرة (Study Session Timer)
+        </h2>
+        <p class="text-xs text-slate-500 mt-1">احسب دقائق تركيزك الفعلية لتمكين MedAI من بناء خطة دقيقة متناسبة مع وقتك المتاح.</p>
+      </div>
+
+      <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center space-y-6">
+        <div class="text-6xl font-black text-slate-900 font-mono tracking-wider" id="display-study-timer">
+          25:00
+        </div>
+
+        <div class="flex items-center justify-center gap-3">
+          <button onclick="toggleStudyTimer()" id="btn-timer-toggle" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm px-8 py-3.5 rounded-2xl transition shadow-lg flex items-center gap-2">
+            <i data-lucide="play" class="w-5 h-5" id="timer-icon"></i>
+            <span id="timer-btn-label">بدء جلسة المذاكرة</span>
+          </button>
+          <button onclick="resetStudyTimer()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm px-5 py-3.5 rounded-2xl transition">
+            إعادة ضبط
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 text-xs">
+          <div class="p-3 bg-slate-50 rounded-2xl">
+            <span class="text-slate-400 block text-[10px]">الجلسات المكتملة</span>
+            <span class="font-black text-slate-800 text-base" id="stat-completed-sessions">0</span>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-2xl">
+            <span class="text-slate-400 block text-[10px]">إجمالي الدقائق</span>
+            <span class="font-black text-slate-800 text-base" id="stat-total-minutes">0 د</span>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-2xl">
+            <span class="text-slate-400 block text-[10px]">الاستراحات</span>
+            <span class="font-black text-slate-800 text-base" id="stat-breaks-count">0</span>
+          </div>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- Notification Toast -->
-  <div id="app-toast" class="fixed bottom-5 right-5 max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+  <!-- ================= SYSTEM TOAST NOTIFICATION ================= -->
+  <div id="app-toast" class="fixed bottom-6 right-6 max-w-sm bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50 border border-slate-800">
     <i data-lucide="info" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-    <span id="app-toast-msg">تنبيه النظام</span>
+    <span id="app-toast-text">تنبيه</span>
   </div>
 
-  <!-- ================= LOGIC & CORE APP STATE ================= -->
+  <!-- ================= LOGIC & CORE ARCHITECTURE ================= -->
   <script>
-    // State starting strictly at ZERO
-    const appState = {
-      uploadedLecturesCount: 0,
-      solvedCount: 0,
-      correctCount: 0,
-      activeLecture: null,
-      activeQuestions: [],
-      currentQIdx: 0,
-      selectedOption: null,
-      mistakeBank: []
-    };
+    /* =========================================================
+       1. DATA ARCHITECTURE: STRICT ZERO-STATE PER USER
+       ========================================================= */
 
-    // Navigation Switcher
-    function switchTab(tabId) {
-      document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('bg-emerald-500/10', 'text-emerald-400');
-        b.classList.add('text-slate-400');
-      });
+    const MODULES_META = [
+      { id: 'SMU', name: 'وحدة الجلد والجهاز العضلي الهيكلي', marks: 150, midterm: '4 أكتوبر 2026' },
+      { id: 'GIT', name: 'وحدة الجهاز الهضمي', marks: 150, midterm: '15 نوفمبر 2026' },
+      { id: 'Urinary', name: 'وحدة الجهاز البولي', marks: 90, midterm: '3 يناير 2027' },
+      { id: 'ECE 2', name: 'الخبرة الإكلينيكية المبكرة 2', marks: 60, midterm: '14 ديسمبر 2026' }
+    ];
 
-      const activeView = document.getElementById('view-' + tabId);
-      const activeBtn = document.getElementById('nav-' + tabId);
+    let currentUser = null;
+    let authMode = 'signup';
 
-      if (activeView) activeView.classList.remove('hidden');
-      if (activeBtn) {
-        activeBtn.classList.add('bg-emerald-500/10', 'text-emerald-400');
-        activeBtn.classList.remove('text-slate-400');
-      }
-      if (window.lucide) lucide.createIcons();
+    const STRICT_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    function isValidEmail(email) {
+      return STRICT_EMAIL_REGEX.test(email);
     }
 
-    function quickSelectModule(modName) {
-      document.getElementById('input-module').value = modName;
-      document.getElementById('input-lecture-title').value = 'محاضرة في ' + modName;
-      switchTab('upload');
-      showToast('تم اختيار موديول ' + modName + ' بنجاح');
+    function clearAuthValidation() {
+      document.getElementById('email-validation-error').classList.add('hidden');
+      document.getElementById('pass-validation-error').classList.add('hidden');
+      document.getElementById('auth-input-email').classList.remove('border-rose-500');
+      document.getElementById('auth-input-pass').classList.remove('border-rose-500');
     }
 
-    function handleFileSelected(event) {
-      const file = event.target.files[0];
-      if (file) {
-        document.getElementById('label-selected-file').innerText = file.name;
-        document.getElementById('input-lecture-title').value = file.name.replace(/\.[^/.]+$/, "");
-        showToast('تم اختيار الملف: ' + file.name);
+    function getStorageUsers() {
+      try {
+        return JSON.parse(localStorage.getItem('medai_users_db')) || {};
+      } catch (e) {
+        return {};
       }
     }
 
-    // Process Lecture & Generate Questions dynamically based on upload
-    function processLectureSubmission() {
-      const title = document.getElementById('input-lecture-title').value.trim();
-      const moduleName = document.getElementById('input-module').value;
-      const notes = document.getElementById('input-lecture-text').value.trim();
+    function saveStorageUsers(usersObj) {
+      localStorage.setItem('medai_users_db', JSON.stringify(usersObj));
+    }
 
-      if (!title) {
-        showToast('يرجى كتابة عنوان المحاضرة أو اختيار ملف أولاً');
+    function getCurrentUserId() {
+      return localStorage.getItem('medai_active_user_id') || null;
+    }
+
+    function setCurrentUserId(id) {
+      if (id) {
+        localStorage.setItem('medai_active_user_id', id);
+        localStorage.setItem('medai_last_active_user', id);
+      } else {
+        localStorage.removeItem('medai_active_user_id');
+      }
+    }
+
+    function checkAuthentication() {
+      const activeId = getCurrentUserId();
+      const lastActiveId = localStorage.getItem('medai_last_active_user');
+      const users = getStorageUsers();
+
+      if (activeId && users[activeId]) {
+        currentUser = users[activeId];
+        document.getElementById('auth-modal').classList.add('hidden');
+        renderApp();
+      } else if (lastActiveId && users[lastActiveId]) {
+        currentUser = null;
+        setupQuickResumeCard(users[lastActiveId]);
+        document.getElementById('auth-modal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+      } else {
+        currentUser = null;
+        document.getElementById('auth-quick-resume-card').classList.add('hidden');
+        document.getElementById('auth-modal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function setupQuickResumeCard(savedUser) {
+      const card = document.getElementById('auth-quick-resume-card');
+      card.classList.remove('hidden');
+      document.getElementById('quick-resume-name').innerText = `د. ${savedUser.name}`;
+      document.getElementById('quick-resume-email').innerText = savedUser.email;
+      document.getElementById('quick-resume-avatar').innerText = savedUser.name.charAt(0) || 'د';
+      document.getElementById('quick-resume-shortname').innerText = savedUser.name.split(' ')[0] || 'طالب';
+    }
+
+    function resumeSavedSession() {
+      const lastActiveId = localStorage.getItem('medai_last_active_user');
+      const users = getStorageUsers();
+      if (lastActiveId && users[lastActiveId]) {
+        setCurrentUserId(lastActiveId);
+        currentUser = users[lastActiveId];
+        document.getElementById('auth-modal').classList.add('hidden');
+        showToast(`أهلاً بعودتك د. ${currentUser.name}!`);
+        renderApp();
+      }
+    }
+
+    function hideQuickResume() {
+      document.getElementById('auth-quick-resume-card').classList.add('hidden');
+    }
+
+    function toggleAuthMode() {
+      clearAuthValidation();
+      authMode = authMode === 'signup' ? 'login' : 'signup';
+      const title = document.getElementById('auth-title');
+      const submitText = document.getElementById('auth-submit-text');
+      const switchPrompt = document.getElementById('auth-switch-prompt');
+      const toggleBtn = document.getElementById('auth-toggle-btn');
+      const nameGroup = document.getElementById('auth-name-group');
+
+      if (authMode === 'login') {
+        title.innerText = 'تسجيل الدخول إلى حسابك الطبي';
+        submitText.innerText = 'دخول الحساب ومتابعة المذاكرة';
+        switchPrompt.innerText = 'ليس لديك حساب بعد؟';
+        toggleBtn.innerText = 'إنشاء حساب جديد (0%)';
+        nameGroup.classList.add('hidden');
+      } else {
+        title.innerText = 'إنشاء حساب طبي جديد (البدء من الصفر 0%)';
+        submitText.innerText = 'إنشاء الحساب والبدء من الصفر';
+        switchPrompt.innerText = 'لديك حساب مسجل بالفعل؟';
+        toggleBtn.innerText = 'تسجيل الدخول';
+        nameGroup.classList.remove('hidden');
+      }
+    }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      clearAuthValidation();
+
+      const emailInput = document.getElementById('auth-input-email');
+      const passInput = document.getElementById('auth-input-pass');
+      const email = emailInput.value.trim().toLowerCase();
+      const pass = passInput.value.trim();
+      const users = getStorageUsers();
+
+      if (!isValidEmail(email)) {
+        document.getElementById('email-validation-error').classList.remove('hidden');
+        emailInput.classList.add('border-rose-500');
+        emailInput.focus();
+        showToast('يرجى كتابة عنوان بريد إلكتروني كامل وصحيح');
         return;
       }
 
-      appState.uploadedLecturesCount++;
-      appState.activeLecture = { title, moduleName, notes };
-
-      // Update counters
-      document.getElementById('stat-lectures').innerText = appState.uploadedLecturesCount;
-      document.getElementById('badge-active-mod').innerText = moduleName;
-      document.getElementById('active-lecture-heading').innerText = title;
-
-      // Summary text based on module
-      const summaryBox = document.getElementById('active-lecture-summary');
-      summaryBox.innerHTML = `
-        تمت قراءة وفهرسة <strong>${title}</strong> ضمن موديول <strong>${moduleName}</strong>.<br>
-        • تم استخراج المفاهيم الإكلينيكية والـ High-Yield Core بنجاح.<br>
-        • تم بناء 3 أسئلة كويز مخصصة لقياس الفهم ورصد الفجوات بدقة.
-      `;
-
-      document.getElementById('box-analyzed-lecture').classList.remove('hidden');
-
-      // Generate 3 contextual questions specifically for this upload
-      buildQuestionsForLecture(moduleName, title);
-
-      // Unlock practice tab
-      document.getElementById('practice-empty-state').classList.add('hidden');
-      document.getElementById('practice-active-box').classList.remove('hidden');
-      loadQuizQuestion(0);
-
-      showToast('تم تحليل المحاضرة وتوليد الكويز بنجاح!');
-    }
-
-    function triggerExplainSimpler() {
-      showToast('🧠 تشبيه تبسيطي: تخيل الآلية كشبكة مواسير ومحابس؛ إذا قل الضغط تنغلق الصمامات تلقائياً للحفاظ على السريان!');
-    }
-
-    // Question Builder based on the actual module uploaded
-    function buildQuestionsForLecture(moduleName, title) {
-      if (moduleName === 'SMU') {
-        appState.activeQuestions = [
-          {
-            q: `في سياق المحاضرة (${title})، ما هو الأيون الأساسي المسؤول عن إطلاق النواقل العصبية (Acetylcholine) في الـ Neuromuscular Junction؟`,
-            options: ['تدفق أيونات الكالسيوم (Ca2+ Influx)', 'خروج أيونات البوتاسيوم (K+ Efflux)', 'دخول الصوديوم فقط دون الحاجة للكالسيوم', 'أيونات الكلوريد'],
-            correct: 0,
-            exp: 'وصول جهد الفعل يفتح قنوات الكالسيوم المعتمدة على الفولتية، وتدفق الكالسيوم هو المحفز المباشر لخروج حويصلات الأستيل كولين.',
-            trap: 'الخلط بين الصوديوم الذي يزيل الاستقطاب والكالسيوم الذي يفجر الحويصلات.'
-          },
-          {
-            q: `مرض Duchenne Muscular Dystrophy ينتج عن خلل في بروتين Dystrophin، ما وظيفته الخلوية؟`,
-            options: ['ربط ألياف الأكتين بالغشاء والمصفوفة الخارجية', 'توليد جزيئات الـ ATP داخل الميتوكوندريا', 'نقل إشارات الألم للمخ', 'تجلط الدم في العضلات'],
-            correct: 0,
-            exp: 'الدستروفين يعمل كجسر يربط الهيكل الخلوي الداخلي (Actin) بالغشاء الخارجي لحماية الليفة العضلية أثناء الانقباض.',
-            trap: 'اعتباره بروتيناً ناقلاً للجهد بدلاً من كونه دعامياً هيكلياً.'
-          }
-        ];
-      } else if (moduleName === 'GIT') {
-        appState.activeQuestions = [
-          {
-            q: `عند تثبيط مضخة البروتون (H+/K+ ATPase) في الخلايا الجدارية، ما التأثير الفسيولوجي المباشر على إفراز هرمون الـ Gastrin؟`,
-            options: ['زيادة إفراز الجاسترين (Hypergastrinemia) بسبب غياب التثبيط الحمضي', 'توقف إفراز الجاسترين تماماً', 'عدم حدوث أي تغير', 'تدمير خلايا G بالكامل'],
-            correct: 0,
-            exp: 'ارتفاع الـ pH وزوال الوسط الحمضي يرفع التثبيط الراجع (Negative Feedback) عن خلايا G، فترتفع مستويات الجاسترين.',
-            trap: 'الاعتقاد بأن نقص الحمض يقلل الجاسترين بينما العكس هو الصحيح.'
-          }
-        ];
-      } else {
-        appState.activeQuestions = [
-          {
-            q: `لماذا يُعد الـ Inulin المقياس الذهبي الدقيق لحساب معدل الترشيح الكبيبي (GFR) في الكلية؟`,
-            options: ['لأنه يترشح بحرية تامة ولا يُعاد امتصاصه ولا يُفرز في الأنابيب الكلوية', 'لأنه يُمتص بنسبة 50% في الأنبوبة القريبة', 'لأنه يوسع الشريان الوارد بشكل نشط', 'لأنه يفرز بكميات هائلة عبر البول فقط'],
-            correct: 0,
-            exp: 'الإنولين يعبر المرشح الكبيبي دون أي معالجة بالامتصاص أو الإفراز، وبالتالي معدل تصفيته = GFR مباشرة.',
-            trap: 'الخلط بين الإنولين واليوريا أو الـ PAH.'
-          }
-        ];
+      if (!pass || pass.length < 6) {
+        document.getElementById('pass-validation-error').classList.remove('hidden');
+        passInput.classList.add('border-rose-500');
+        passInput.focus();
+        showToast('كلمة المرور يجب ألا تقل عن 6 خانات');
+        return;
       }
-      appState.currentQIdx = 0;
+
+      if (authMode === 'signup') {
+        const nameInput = document.getElementById('auth-input-name');
+        const name = nameInput.value.trim();
+        const year = document.getElementById('auth-input-year').value;
+
+        if (!name) {
+          nameInput.focus();
+          showToast('يرجى كتابة الاسم الكامل للطالب للبدء');
+          return;
+        }
+
+        if (users[email]) {
+          showToast('هذا البريد مسجل بالفعل! جارٍ تحويلك لتسجيل الدخول...');
+          toggleAuthMode();
+          emailInput.value = email;
+          return;
+        }
+
+        // New Empty User Structure starting at ABSOLUTE ZERO
+        const newUser = {
+          id: email,
+          name: name,
+          email: email,
+          password: pass,
+          year: year,
+          streak: 0,
+          createdDate: new Date().toISOString(),
+          lectures: [],
+          questionsSolved: 0,
+          correctCount: 0,
+          mistakes: [],
+          flashcards: [],
+          clinicalCasesSolved: 0,
+          studyMinutesTotal: 0,
+          topicMastery: {}
+        };
+
+        users[email] = newUser;
+        saveStorageUsers(users);
+        setCurrentUserId(email);
+        currentUser = newUser;
+        document.getElementById('auth-modal').classList.add('hidden');
+        showToast(`مرحباً د. ${name}! تم إنشاء حسابك الجديد بنجاح.`);
+        renderApp();
+      } else {
+        if (users[email] && users[email].password === pass) {
+          setCurrentUserId(email);
+          currentUser = users[email];
+          document.getElementById('auth-modal').classList.add('hidden');
+          showToast(`أهلاً بعودتك د. ${currentUser.name}!`);
+          renderApp();
+        } else {
+          showToast('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+          passInput.classList.add('border-rose-500');
+        }
+      }
     }
 
-    // Quiz Navigation & Evaluation
-    function loadQuizQuestion(idx) {
-      appState.currentQIdx = idx;
-      appState.selectedOption = null;
+    function logoutUser() {
+      setCurrentUserId(null);
+      currentUser = null;
+      checkAuthentication();
+      showToast('تم تسجيل الخروج.');
+    }
 
-      const q = appState.activeQuestions[idx];
-      document.getElementById('quiz-progress-text').innerText = `السؤال ${idx + 1} من ${appState.activeQuestions.length}`;
-      document.getElementById('quiz-topic-text').innerText = appState.activeLecture.moduleName;
-      document.getElementById('quiz-question-text').innerText = q.q;
+    function persistCurrentUser() {
+      if (!currentUser) return;
+      const users = getStorageUsers();
+      users[currentUser.id] = currentUser;
+      saveStorageUsers(users);
+    }
 
-      const container = document.getElementById('quiz-options-container');
-      container.innerHTML = '';
+    /* =========================================================
+       2. TAB NAVIGATION & GLOBAL SEARCH
+       ========================================================= */
 
-      q.options.forEach((opt, i) => {
-        const btn = document.createElement('button');
-        btn.id = `opt-btn-${i}`;
-        btn.className = 'w-full text-right p-3 rounded-xl border border-slate-200 hover:border-slate-300 text-xs font-medium transition flex items-center justify-between';
-        btn.innerHTML = `<span>${opt}</span><span class="w-3 h-3 rounded-full border border-slate-300"></span>`;
-        btn.onclick = () => selectQuizOpt(i);
-        container.appendChild(btn);
+    function switchNavTab(tabId) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-500/10', 'text-emerald-400');
+        btn.classList.add('text-slate-400');
       });
 
-      document.getElementById('btn-quiz-confirm').disabled = true;
-      document.getElementById('btn-quiz-confirm').classList.remove('hidden');
-      document.getElementById('btn-quiz-next').classList.add('hidden');
-      document.getElementById('quiz-result-feedback').classList.add('hidden');
+      const activeView = document.getElementById('view-' + tabId);
+      const activeNavBtn = document.getElementById('nav-' + tabId);
+
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeNavBtn) {
+        activeNavBtn.classList.add('bg-emerald-500/10', 'text-emerald-400');
+        activeNavBtn.classList.remove('text-slate-400');
+      }
+
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'quiz') renderQuizScreen();
+      if (tabId === 'mistakes') renderMistakes();
+      if (tabId === 'tutor') renderTutorLecturesDropdown();
+      if (tabId === 'qbank') renderQBank();
+      if (tabId === 'flashcards') renderFlashcardsScreen();
+      if (tabId === 'cases') renderCasesScreen();
+      if (tabId === 'sim-exam') renderSimExamSetup();
+
+      if (window.lucide) lucide.createIcons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function selectQuizOpt(index) {
-      appState.selectedOption = index;
-      appState.activeQuestions[appState.currentQIdx].options.forEach((_, i) => {
-        const el = document.getElementById(`opt-btn-${i}`);
-        if (i === index) {
-          el.className = 'w-full text-right p-3 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 text-xs font-bold transition flex items-center justify-between text-slate-900';
-        } else {
-          el.className = 'w-full text-right p-3 rounded-xl border border-slate-200 text-xs font-medium transition flex items-center justify-between text-slate-600';
+    function toggleGlobalSearch() {
+      const modal = document.getElementById('search-modal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        document.getElementById('global-search-input').focus();
+      }
+    }
+
+    // Keyboard shortcut for search (Ctrl+K or Cmd+K)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        toggleGlobalSearch();
+      }
+    });
+
+    function executeGlobalSearch() {
+      const q = document.getElementById('global-search-input').value.trim().toLowerCase();
+      const resBox = document.getElementById('search-results-box');
+
+      if (!q) {
+        resBox.innerHTML = '<p class="text-center py-6 text-slate-400">اكتب مصطلحاً للبحث في كافة المحاضرات والأخطاء...</p>';
+        return;
+      }
+
+      const results = [];
+      const lectures = (currentUser ? currentUser.lectures : []) || [];
+      const mistakes = (currentUser ? currentUser.mistakes : []) || [];
+
+      // Search Lectures
+      lectures.forEach(l => {
+        if (l.title.toLowerCase().includes(q) || (l.contentExcerpt && l.contentExcerpt.toLowerCase().includes(q))) {
+          results.push({
+            type: 'محاضرة',
+            title: l.title,
+            sub: `${l.module} • ${l.discipline || 'عام'}`,
+            action: () => { toggleGlobalSearch(); openLectureTutor(l.id); switchNavTab('upload'); }
+          });
         }
       });
-      document.getElementById('btn-quiz-confirm').disabled = false;
-    }
 
-    function confirmQuizAnswer() {
-      const q = appState.activeQuestions[appState.currentQIdx];
-      const isCorrect = appState.selectedOption === q.correct;
-      const feedback = document.getElementById('quiz-result-feedback');
+      // Search Mistakes
+      mistakes.forEach(m => {
+        if (m.question.toLowerCase().includes(q) || m.topic.toLowerCase().includes(q)) {
+          results.push({
+            type: 'خطأ مسجل',
+            title: m.topic,
+            sub: m.question.slice(0, 70) + '...',
+            action: () => { toggleGlobalSearch(); switchNavTab('mistakes'); }
+          });
+        }
+      });
 
-      appState.solvedCount++;
-      if (isCorrect) appState.correctCount++;
-
-      feedback.classList.remove('hidden');
-      if (isCorrect) {
-        feedback.className = 'p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs leading-relaxed space-y-1';
-        feedback.innerHTML = `<strong>✓ إجابة صحيحة:</strong> ${q.exp}`;
-        showToast('إجابة صحيحة!');
-      } else {
-        feedback.className = 'p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs leading-relaxed space-y-1';
-        feedback.innerHTML = `
-          <div><strong>✕ إجابة غير دقيقة (سُجلت في بنك الأخطاء):</strong> ${q.exp}</div>
-          <div class="text-[11px] text-rose-700 bg-white/70 p-2 rounded-lg mt-1 font-medium">⚠️ فخ شائع: ${q.trap}</div>
-        `;
-
-        // Add to Mistake Bank
-        appState.mistakeBank.unshift({
-          module: appState.activeLecture.moduleName,
-          lecture: appState.activeLecture.title,
-          q: q.q,
-          trap: q.trap
-        });
-        updateMistakesUI();
-        showToast('تم تسجيل الخطأ في بنك الأخطاء');
+      if (results.length === 0) {
+        resBox.innerHTML = `<p class="text-center py-6 text-slate-400">لم يتم العثور على نتائج مطابقة لـ "${q}"</p>`;
+        return;
       }
 
-      // Update Dashboard Stats
-      document.getElementById('stat-solved').innerText = appState.solvedCount;
-      const mastery = Math.round((appState.correctCount / appState.solvedCount) * 100);
-      document.getElementById('stat-mastery').innerText = `${mastery}%`;
-
-      document.getElementById('btn-quiz-confirm').classList.add('hidden');
-      document.getElementById('btn-quiz-next').classList.remove('hidden');
-    }
-
-    function nextQuizQuestion() {
-      if (appState.currentQIdx + 1 < appState.activeQuestions.length) {
-        loadQuizQuestion(appState.currentQIdx + 1);
-      } else {
-        showToast('اكتمل كويز المحاضرة! أحسنت.');
-        switchTab('dashboard');
-      }
-    }
-
-    // Mistake Bank UI Updater
-    function updateMistakesUI() {
-      const container = document.getElementById('mistakes-list');
-      const badge = document.getElementById('badge-mistakes');
-      const statBadge = document.getElementById('stat-mistakes');
-
-      badge.innerText = appState.mistakeBank.length;
-      statBadge.innerText = appState.mistakeBank.length;
-
-      if (appState.mistakeBank.length === 0) {
-        document.getElementById('mistakes-clean-state').classList.remove('hidden');
-      } else {
-        container.innerHTML = appState.mistakeBank.map((m, idx) => `
-          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded">${m.module}</span>
-                <span class="text-xs font-bold text-slate-700">${m.lecture}</span>
-              </div>
-              <p class="text-xs text-slate-800 font-medium">${m.q}</p>
-              <p class="text-[11px] text-slate-500">الفخ المشخص: ${m.trap}</p>
+      resBox.innerHTML = results.map((r, i) => `
+        <div onclick="executeSearchResult(${i})" class="p-3 bg-slate-50 hover:bg-emerald-50 border border-slate-200 rounded-xl cursor-pointer transition flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-bold bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded">${r.type}</span>
+              <h5 class="font-bold text-slate-900">${r.title}</h5>
             </div>
-            <button onclick="retestSingleMistake(${idx})" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-lg border border-rose-200 transition whitespace-nowrap">
-              إعادة اختبار المفهوم
+            <p class="text-[11px] text-slate-500 mt-0.5">${r.sub}</p>
+          </div>
+          <i data-lucide="chevron-left" class="w-4 h-4 text-slate-400"></i>
+        </div>
+      `).join('');
+
+      window._searchResultsCache = results;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function executeSearchResult(idx) {
+      if (window._searchResultsCache && window._searchResultsCache[idx]) {
+        window._searchResultsCache[idx].action();
+      }
+    }
+
+    /* =========================================================
+       3. DASHBOARD RENDERER & "WHAT SHOULD I STUDY NOW?"
+       ========================================================= */
+
+    function renderApp() {
+      if (!currentUser) return;
+
+      document.getElementById('user-display-name').innerText = `د. ${currentUser.name}`;
+      document.getElementById('user-display-email').innerText = currentUser.email;
+      document.getElementById('dash-greeting').innerText = `مرحباً د. ${currentUser.name} 👋`;
+      document.getElementById('user-avatar-initial').innerText = currentUser.name.charAt(0) || 'د';
+      document.getElementById('val-user-streak').innerText = currentUser.streak || 0;
+
+      renderDashboard();
+      generateNextBestAction();
+      renderLecturesLibrary();
+      renderQuizScreen();
+      renderMistakes();
+      renderQBank();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderDashboard() {
+      if (!currentUser) return;
+
+      const totalSolved = currentUser.questionsSolved || 0;
+      const totalLectures = (currentUser.lectures || []).length;
+      const mistakesCount = (currentUser.mistakes || []).length;
+      const studyMins = currentUser.studyMinutesTotal || 0;
+
+      document.getElementById('badge-lectures-count').innerText = totalLectures;
+      document.getElementById('badge-nav-mistakes').innerText = mistakesCount;
+      document.getElementById('stat-lectures-count').innerText = totalLectures;
+      document.getElementById('stat-questions-count').innerText = totalSolved;
+      document.getElementById('stat-mistakes-count').innerText = mistakesCount;
+      document.getElementById('stat-study-time').innerText = `${studyMins} دقيقة وقت مذاكرة`;
+
+      if (totalSolved === 0) {
+        document.getElementById('stat-mastery-val').innerText = '—';
+        document.getElementById('stat-mastery-subtitle').innerText = 'لا توجد بيانات كافية للتقييم';
+        document.getElementById('stat-mastery-bar').style.width = '0%';
+        document.getElementById('stat-accuracy-rate').innerText = 'دقة الإجابات: —';
+      } else {
+        const accuracy = Math.round((currentUser.correctCount / totalSolved) * 100);
+        document.getElementById('stat-accuracy-rate').innerText = `دقة الإجابات: ${accuracy}%`;
+
+        const topics = Object.keys(currentUser.topicMastery || {});
+        if (topics.length > 0) {
+          const avg = Math.round(topics.reduce((acc, t) => acc + currentUser.topicMastery[t].score, 0) / topics.length);
+          document.getElementById('stat-mastery-val').innerText = `${avg}%`;
+          document.getElementById('stat-mastery-subtitle').innerText = `مبني على ${totalSolved} سؤالاً محلولاً`;
+          document.getElementById('stat-mastery-bar').style.width = `${avg}%`;
+        } else {
+          document.getElementById('stat-mastery-val').innerText = `${accuracy}%`;
+          document.getElementById('stat-mastery-bar').style.width = `${accuracy}%`;
+        }
+      }
+
+      renderKnowledgeMap();
+      renderModulesCards();
+      generateNextBestAction();
+    }
+
+    // Feature 15: "What Should I Study Right Now?"
+    function generateNextBestAction() {
+      const container = document.getElementById('next-action-container');
+      const mins = parseInt(document.getElementById('select-available-time').value) || 45;
+      const lectures = (currentUser ? currentUser.lectures : []) || [];
+      const mistakes = (currentUser ? currentUser.mistakes : []) || [];
+
+      if (lectures.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500 space-y-2">
+            <i data-lucide="compass" class="w-7 h-7 mx-auto text-slate-300"></i>
+            <p class="font-bold text-slate-700">ابدأ بإضافة أول محاضرة أو تسجيل صوتي</p>
+            <p class="text-[11px]">بمجرد رفع أول ملف، سيقترح النظام تلقائياً توزيع وقتك (${mins} دقيقة) بين المراجعة والأسئلة والبطاقات.</p>
+            <button onclick="switchNavTab('upload')" class="mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-[11px] transition">
+              إضافة محاضرة الآن
             </button>
           </div>
-        `).join('');
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
       }
+
+      // Proportional distribution based on real student gaps
+      const hasMistakes = mistakes.length > 0;
+      let planItems = [];
+
+      if (mins <= 30) {
+        if (hasMistakes) {
+          planItems = [
+            { time: '15 دقيقة', title: 'علاج أخطاء بنك الأسئلة', sub: `${mistakes.length} مفاهيم تحتاج لتثبيت`, action: () => startMistakesPractice() },
+            { time: '15 دقيقة', title: 'كويز سريع 10 أسئلة', sub: 'تثبيت استيعاب المحاضرة النشطة', action: () => startAdaptiveAllLecturesQuiz() }
+          ];
+        } else {
+          planItems = [
+            { time: '20 دقيقة', title: `مراجعة High-Yield: ${lectures[0].title}`, sub: 'قراءة النقاط المفصلية وجدول المقارنات', action: () => openLectureTutor(lectures[0].id) },
+            { time: '10 دقيقة', title: 'بطاقات التكرار المتباعد', sub: 'اختبار الاسترجاع السريع', action: () => switchNavTab('flashcards') }
+          ];
+        }
+      } else if (mins <= 60) {
+        planItems = [
+          { time: '15 دقيقة', title: `مراجعة المحاضرة: ${lectures[0].title}`, sub: 'فهم النقاط الصعبة والآليات الوظيفية', action: () => openLectureTutor(lectures[0].id) },
+          { time: '20 دقيقة', title: 'امتحان تكيفي عالي الدقة (Adaptive Quiz)', sub: 'يركز على نقاط الضعف المسجلة', action: () => startAdaptiveAllLecturesQuiz() },
+          { time: hasMistakes ? '15 دقيقة' : '10 دقيقة', title: hasMistakes ? 'معالجة أخطاء الكويزات السابقة' : 'بطاقات التكرار المتباعد', sub: hasMistakes ? 'تحليل المآزق الشائعة (Trap Analysis)' : 'تأكيد الحفظ الدائم', action: () => hasMistakes ? startMistakesPractice() : switchNavTab('flashcards') }
+        ];
+      } else {
+        // 90 minutes
+        planItems = [
+          { time: '30 دقيقة', title: 'مذاكرة عميقة + تقنية فاينمان (Explain It)', sub: 'شرح المفهوم بأسلوبك والتحقق من النواقص', action: () => switchNavTab('active-recall') },
+          { time: '30 دقيقة', title: 'محاكاة امتحان شامل (Mock Exam)', sub: 'تدريب تحت ضغط الوقت الفعلي', action: () => switchNavTab('sim-exam') },
+          { time: '20 دقيقة', title: 'تحليل الأخطاء المسجلة في بنك الأخطاء', sub: 'إعادة اختبار المفاهيم الخاطئة', action: () => startMistakesPractice() },
+          { time: '10 دقائق', title: 'مراجعة Flashcards اليوم', sub: 'ختام الجلسة بترسيخ الذاكرة طويلة المدى', action: () => switchNavTab('flashcards') }
+        ];
+      }
+
+      container.innerHTML = `
+        <div class="space-y-2.5">
+          ${planItems.map(p => `
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="bg-emerald-600/10 text-emerald-800 text-[11px] font-black px-2.5 py-1 rounded-xl border border-emerald-200/60 shrink-0 font-mono">${p.time}</span>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900">${p.title}</h4>
+                  <p class="text-[11px] text-slate-500 mt-0.5">${p.sub}</p>
+                </div>
+              </div>
+              <button onclick="(${p.action.toString()})()" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-3.5 py-2 rounded-xl transition shrink-0">
+                ابدأ الآن ←
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
       if (window.lucide) lucide.createIcons();
     }
 
-    function retestSingleMistake(idx) {
-      showToast('جاري إعادة اختبار المفهوم...');
-      switchTab('practice');
-      loadQuizQuestion(0);
+    function startNextBestAction() {
+      document.getElementById('next-action-container').scrollIntoView({ behavior: 'smooth' });
     }
 
-    let toastTimer = null;
+    // Feature 13: Knowledge Map
+    function renderKnowledgeMap() {
+      const grid = document.getElementById('knowledge-map-grid');
+      const topics = Object.entries(currentUser.topicMastery || {});
+
+      if (topics.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-400">
+            <i data-lucide="map-pin" class="w-6 h-6 mx-auto text-slate-300 mb-1"></i>
+            <p class="font-bold text-slate-600">خارطة المعرفة فارغة حتى الآن</p>
+            <p class="text-[11px]">ستتوزع هنا تلقائياً نسب إتقانك في (Physiology, Anatomy, Pharmacology) بناءً على إجاباتك الحقيقية.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = topics.map(([topic, data]) => {
+        const color = data.score >= 80 ? 'bg-emerald-500' : data.score >= 60 ? 'bg-amber-500' : 'bg-rose-500';
+        const badgeColor = data.score >= 80 ? 'bg-emerald-50 text-emerald-800' : data.score >= 60 ? 'bg-amber-50 text-amber-800' : 'bg-rose-50 text-rose-800';
+
+        return `
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor}">${data.module || 'Medical'}</span>
+              <span class="text-xs font-black text-slate-800">${data.score}%</span>
+            </div>
+            <h4 class="text-xs font-bold text-slate-900">${topic}</h4>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div class="h-full ${color} rounded-full" style="width: ${data.score}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderModulesCards() {
+      const container = document.getElementById('dash-modules-cards');
+      container.innerHTML = MODULES_META.map(m => {
+        const modLectures = (currentUser.lectures || []).filter(l => l.module === m.id);
+        const lecturesCount = modLectures.length;
+        
+        return `
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <div class="flex justify-between items-start">
+              <span class="text-[10px] font-extrabold bg-white border border-slate-200 text-slate-800 px-2 py-0.5 rounded-lg">${m.id}</span>
+              <span class="text-[10px] font-bold text-slate-500">${m.marks} درجة</span>
+            </div>
+            <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${m.name}</h4>
+            <div class="flex items-baseline justify-between pt-1">
+              <span class="text-xs font-bold text-emerald-700">${lecturesCount} محاضرات</span>
+              <span class="text-[10px] text-slate-400 font-mono">${m.midterm}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* =========================================================
+       4. AUDIO RECORDING & LECTURE UPLOAD PIPELINE
+       ========================================================= */
+
+    let isRecording = false;
+    let speechRecognitionInstance = null;
+    let recordingTimerInterval = null;
+    let recordingSeconds = 0;
+    let activeParsedLecture = null;
+
+    function toggleVoiceRecording() {
+      if (!isRecording) {
+        startVoiceRecording();
+      } else {
+        stopVoiceRecording();
+      }
+    }
+
+    function startVoiceRecording() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('متصفحك الحالي لا يدعم التعرف الصوتي المباشر. يمكنك استخدام رفع ملف صوتي بدلاً منه.');
+        return;
+      }
+
+      try {
+        speechRecognitionInstance = new SpeechRecognition();
+        speechRecognitionInstance.continuous = true;
+        speechRecognitionInstance.interimResults = true;
+        speechRecognitionInstance.lang = 'ar-EG'; // Primary Arabic, will capture medical terms
+
+        speechRecognitionInstance.onstart = () => {
+          isRecording = true;
+          recordingSeconds = 0;
+          document.getElementById('record-btn-label').innerText = 'إيقاف وحفظ التفريغ';
+          document.getElementById('recording-pulse-badge')?.classList.add('recording-pulse');
+          document.getElementById('recording-timer').classList.remove('hidden');
+          document.getElementById('recording-status-text').classList.remove('hidden');
+          
+          recordingTimerInterval = setInterval(() => {
+            recordingSeconds++;
+            const m = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+            const s = String(recordingSeconds % 60).padStart(2, '0');
+            document.getElementById('recording-timer').innerText = `${m}:${s}`;
+          }, 1000);
+
+          showToast('بدأ تسجيل المحاضرة صوتياً... تحدث الآن.');
+        };
+
+        speechRecognitionInstance.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+          }
+          const txtArea = document.getElementById('input-upload-content');
+          txtArea.value = (txtArea.value ? txtArea.value + ' ' : '') + transcript;
+        };
+
+        speechRecognitionInstance.onerror = (event) => {
+          console.error('Speech error:', event.error);
+          stopVoiceRecording();
+          showToast('توقف التسجيل: ' + event.error);
+        };
+
+        speechRecognitionInstance.onend = () => {
+          if (isRecording) {
+            stopVoiceRecording();
+          }
+        };
+
+        speechRecognitionInstance.start();
+      } catch (err) {
+        console.error(err);
+        showToast('تعذر الوصول للمايكروفون.');
+      }
+    }
+
+    function stopVoiceRecording() {
+      isRecording = false;
+      clearInterval(recordingTimerInterval);
+      if (speechRecognitionInstance) {
+        try { speechRecognitionInstance.stop(); } catch (e) {}
+      }
+      document.getElementById('record-btn-label').innerText = 'بدء التسجيل الآن';
+      document.getElementById('recording-status-text').classList.add('hidden');
+      showToast('تم إيقاف التسجيل وتفريغ الصوت في خانة المحتوى بنجاح!');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function onFileSelected(e) {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('label-picked-file').innerText = file.name;
+        if (!document.getElementById('input-upload-title').value.trim()) {
+          document.getElementById('input-upload-title').value = file.name.replace(/\.[^/.]+$/, "");
+        }
+
+        // If audio file, add simulated transcript
+        if (file.type.includes('audio') || /\.(mp3|wav|m4a|aac)$/i.test(file.name)) {
+          showToast('تم استلام التسجيل الصوتي! يتم الآن تفريغه وتحليله...');
+          setTimeout(() => {
+            const simulatedTranscription = `تفريغ التسجيل الصوتي لـ (${file.name}): الدكتور يتحدث عن الآلية الوظيفية، تفريق المستقبلات، وأهم التطبيقات الإكلينيكية والتشخيصية المتعلقة بالـ Pathophysiology.`;
+            document.getElementById('input-upload-content').value = simulatedTranscription;
+            showToast('اكتمل تفريغ التسجيل الصوتي بنجاح!');
+          }, 1200);
+        } else {
+          showToast('تم اختيار الملف: ' + file.name);
+        }
+      }
+    }
+
+    function processUpload() {
+      const title = document.getElementById('input-upload-title').value.trim();
+      const mod = document.getElementById('input-upload-mod').value;
+      const discipline = document.getElementById('input-upload-discipline').value;
+      const content = document.getElementById('input-upload-content').value.trim();
+
+      if (!title) {
+        showToast('يرجى كتابة عنوان المحاضرة على الأقل.');
+        return;
+      }
+
+      // Generate Full Suite (Summaries, High-Yield, Comparisons, Clinical, Questions, Flashcards)
+      const lectureData = generateFullLecturePayload(title, mod, discipline, content);
+
+      const newLecture = {
+        id: 'lec_' + Date.now(),
+        title: title,
+        module: mod,
+        discipline: discipline,
+        contentExcerpt: content.slice(0, 300) || 'محتوى محاضرة ' + title,
+        date: new Date().toLocaleDateString('ar-EG'),
+        summaries: lectureData.summaries,
+        highYieldPoints: lectureData.highYieldPoints,
+        clinicalCorrelations: lectureData.clinicalCorrelations,
+        comparisonTable: lectureData.comparisonTable,
+        questions: lectureData.questions,
+        flashcards: lectureData.flashcards
+      };
+
+      currentUser.lectures = currentUser.lectures || [];
+      currentUser.lectures.unshift(newLecture);
+
+      // Merge flashcards into student's deck
+      currentUser.flashcards = currentUser.flashcards || [];
+      currentUser.flashcards.unshift(...lectureData.flashcards);
+
+      persistCurrentUser();
+
+      activeParsedLecture = newLecture;
+      displayProcessedLecture(newLecture);
+      renderDashboard();
+      renderLecturesLibrary();
+      renderTutorLecturesDropdown();
+
+      showToast('تمت معالجة المحاضرة وتوليد الملخص والكويز والبطاقات بنجاح!');
+    }
+
+    function generateFullLecturePayload(title, mod, discipline, text) {
+      const mainTopic = title;
+
+      // 3 Levels of Summary (Fast / Medium / Detailed)
+      const summaries = {
+        fast: `⚡ <strong>Quick Blitz:</strong> دراسة ${mainTopic} في ${discipline} ترتكز على الآلية الأولية المباشرة (Trigger ➔ Effector). أهم مفتاح للامتحان هو التفريق بين التأثير الفسيولوجي المباشر ورد الفعل التعويضي الثانوي.`,
+        medium: `📄 <strong>Standard Summary:</strong> تتناول المحاضرة تنظيم ${mainTopic}. تبدأ بالمسار الوظيفي الطبيعي، ثم تأثير المستقبلات النوعية، مع تسليط الضوء على الخلل الذي يقود للحالة المرضية (Clinical Presentation) والتدخل الدوائي الفعال.`,
+        detailed: `🔬 <strong>Deep Dive:</strong> تحليل شامل لـ ${mainTopic}: <br>1. المحفز الأساسي (Primary Stimulus).<br>2. التغير في نفاذية الغشاء ونقل الإشارات الخلوية.<br>3. الاستجابة العضوية النهائية والتغذية الراجعة السلبية (Negative Feedback).<br>4. الربط الدوائي: الأدوية المحفزة والمثبطة والمآزق الشائعة في التشخيص التفريقي.`
+      };
+
+      // High-Yield Points
+      const highYieldPoints = [
+        `أهم نقطة امتحان في موديول ${mod}: التمييز بين المسار الأولي المباشر والتعويض الثانوي (Primary vs Compensatory).`,
+        `سؤال متكرر: العامل المحدد لمعدل الاستجابة (Rate-Limiting Step) في مسار ${mainTopic}.`,
+        `فخ شائع للامتحان: الخلط بين تثبيط المستقبلات وتثبيط الإنزيمات المسؤولة عن التكسير.`
+      ];
+
+      // Clinical Correlations & Mnemonics
+      const clinicalCorrelations = [
+        `🩺 <strong>Clinical Correlation:</strong> تظهر أعراض الخلل في ${mainTopic} غالباً على شكل إجهاد أو اضطراب وظيفي مباشر، ويجب الحذر من إعطاء محفزات قوية قبل التأكد من وظائف الكلى.`,
+        `💡 <strong>Mnemonic:</strong> تذكر القاعدة الذهبية [<strong>FAST-MED</strong>] لتذكر الأعراض التحذيرية والترتيب الصحيح لخطوات الفحص السريري.`
+      ];
+
+      // Comparison Table
+      const comparisonTable = `
+        <table class="w-full text-right border-collapse">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700 font-black">
+              <th class="p-2.5 border border-slate-200">الوجه المقارن</th>
+              <th class="p-2.5 border border-slate-200">الحالة الطبيعية (Physiological)</th>
+              <th class="p-2.5 border border-slate-200">الاضطراب (Pathological)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="p-2.5 border border-slate-200 font-bold text-slate-800">نشاط المستقبلات</td>
+              <td class="p-2.5 border border-slate-200 text-emerald-700 font-medium">منظم وفق الحاجة والـ Homeostasis</td>
+              <td class="p-2.5 border border-slate-200 text-rose-700 font-medium">تحفيز مفرط أو سد غير رجعي</td>
+            </tr>
+            <tr class="bg-slate-50/50">
+              <td class="p-2.5 border border-slate-200 font-bold text-slate-800">الاستجابة الإكلينيكية</td>
+              <td class="p-2.5 border border-slate-200">استقرار المؤشرات الحيوية</td>
+              <td class="p-2.5 border border-slate-200">ظهور أعراض سريرية تستدعي التدخل</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+
+      // Dynamic Questions
+      const questions = [
+        {
+          id: 'q_' + Date.now() + '_1',
+          lectureTitle: title,
+          topic: mainTopic,
+          module: mod,
+          discipline: discipline,
+          difficulty: 'Medium',
+          question: `في سياق دراسة (${mainTopic}) ضمن موديول (${mod})، ما هو العامل الأكثر حساسية في تحديد الاستجابة الأولية؟`,
+          options: [
+            `التفاعل الفسيولوجي المباشر عبر المستقبلات المتخصصة في ${mainTopic}`,
+            `التثبيط غير النشط دون أي تأثير على الغشاء الخلوي`,
+            `تثبيط كلي لجميع القنوات الأيونية في نفس اللحظة`,
+            `زيادة غير محدودة في إفراز النواقل العصبية دون تنظيم`
+          ],
+          correct: 0,
+          explanation: `التفاعل الفسيولوجي المباشر عبر المستقبلات هو الأساس الوظيفي المعتمد في دراسة ${mainTopic}.`,
+          trap: `الافتراض الشائع بأن التثبيط يحدث بدون آلية وظيفية منظمة.`,
+          source: `${title} → Slide 08`
+        },
+        {
+          id: 'q_' + Date.now() + '_2',
+          lectureTitle: title,
+          topic: mainTopic,
+          module: mod,
+          discipline: discipline,
+          difficulty: 'Hard',
+          question: `مريض يعاني من اضطراب في المسار الطبيعي لـ (${mainTopic})، ما هو التغير المتوقع في خطة التدبير العلاجي؟`,
+          options: [
+            `استخدام منظم نوعي يستهدف موقع الخلل بدقة مع مراقبة الوظائف الحيوية`,
+            `إيقاف كافة التدخلات الطبية والانتظار دون تقييم مخبري`,
+            `إعطاء جرعات قصوى من مضادات الالتهاب دون تحديد السبب`,
+            `تجاهل الأعراض السريرية لعدم ارتباطها بالمسار`
+          ],
+          correct: 0,
+          explanation: `يتطلب التدبير العلاجي استخدام منظم نوعي يستهدف السبب الجذري لـ ${mainTopic}.`,
+          trap: `الخلط بين العلاج العرضي السريع والعلاج الموجه لصلب الآلية المرضية.`,
+          source: `${title} → Slide 19`
+        }
+      ];
+
+      // Flashcards
+      const flashcards = [
+        {
+          id: 'fc_' + Date.now() + '_1',
+          lectureTitle: title,
+          module: mod,
+          front: `ما هي الوظيفة الأساسية في آلية (${mainTopic})؟`,
+          back: `تنظيم التوازن الوظيفي والاستجابة الإشارية الدقيقة للعضو المستهدف.`,
+          interval: 1, // Day 1
+          dueDate: new Date(Date.now() + 86400000).toISOString()
+        },
+        {
+          id: 'fc_' + Date.now() + '_2',
+          lectureTitle: title,
+          module: mod,
+          front: `ما هو الفخ الأكثر تكراراً في امتحانات (${mainTopic})؟`,
+          back: `الخلط بين الاستجابة الأولية المباشرة ورد الفعل التعويضي الثانوي.`,
+          interval: 1,
+          dueDate: new Date(Date.now() + 86400000).toISOString()
+        }
+      ];
+
+      return {
+        summaries: summaries,
+        highYieldPoints: highYieldPoints,
+        clinicalCorrelations: clinicalCorrelations,
+        comparisonTable: comparisonTable,
+        questions: questions,
+        flashcards: flashcards
+      };
+    }
+
+    function displayProcessedLecture(lecture) {
+      const container = document.getElementById('processed-lecture-container');
+      container.classList.remove('hidden');
+
+      document.getElementById('proc-title').innerText = lecture.title;
+      document.getElementById('proc-mod-badge').innerText = lecture.module;
+      document.getElementById('proc-discipline-badge').innerText = lecture.discipline || 'Physiology';
+      document.getElementById('proc-date').innerText = lecture.date;
+
+      setSummaryLevel('fast');
+
+      // High-Yield Points
+      document.getElementById('proc-high-yield-list').innerHTML = (lecture.highYieldPoints || []).map(p => `
+        <div class="flex items-start gap-2">
+          <span class="text-amber-600 font-bold">•</span>
+          <p>${p}</p>
+        </div>
+      `).join('');
+
+      // Clinical Correlations
+      document.getElementById('proc-clinical-list').innerHTML = (lecture.clinicalCorrelations || []).map(p => `
+        <div class="space-y-1">
+          <p>${p}</p>
+        </div>
+      `).join('');
+
+      // Comparison Table
+      document.getElementById('proc-comparison-table').innerHTML = lecture.comparisonTable || '';
+
+      container.scrollIntoView({ behavior: 'smooth' });
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setSummaryLevel(level) {
+      if (!activeParsedLecture || !activeParsedLecture.summaries) return;
+
+      document.getElementById('btn-sum-fast').className = level === 'fast' ? 'px-2.5 py-1 rounded-lg transition bg-white text-slate-900 shadow-sm' : 'px-2.5 py-1 rounded-lg transition text-slate-600 hover:text-slate-900';
+      document.getElementById('btn-sum-med').className = level === 'medium' ? 'px-2.5 py-1 rounded-lg transition bg-white text-slate-900 shadow-sm' : 'px-2.5 py-1 rounded-lg transition text-slate-600 hover:text-slate-900';
+      document.getElementById('btn-sum-det').className = level === 'detailed' ? 'px-2.5 py-1 rounded-lg transition bg-white text-slate-900 shadow-sm' : 'px-2.5 py-1 rounded-lg transition text-slate-600 hover:text-slate-900';
+
+      document.getElementById('summary-content-box').innerHTML = activeParsedLecture.summaries[level] || activeParsedLecture.summaries.fast;
+    }
+
+    function renderLecturesLibrary() {
+      const list = document.getElementById('lectures-library-list');
+      const lectures = currentUser ? (currentUser.lectures || []) : [];
+
+      if (lectures.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-400 space-y-2">
+            <i data-lucide="folder-open" class="w-8 h-8 mx-auto text-slate-300"></i>
+            <p class="font-bold text-slate-600">لا توجد محاضرات في حسابك حتى الآن</p>
+            <p class="text-[11px]">سجل صوتاً أو ارفع أول ملف لتبدأ المنصة عملها.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = lectures.map(l => `
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold bg-white border border-slate-200 px-2 py-0.5 rounded text-slate-700">${l.module}</span>
+              <span class="text-[10px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded">${l.discipline || 'Medical'}</span>
+              <h4 class="text-xs font-bold text-slate-900">${l.title}</h4>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">${(l.questions || []).length} أسئلة كويز • ${(l.flashcards || []).length} بطاقات • أُضيفت: ${l.date}</p>
+          </div>
+          <div class="flex items-center gap-2 self-end sm:self-auto">
+            <button onclick="openLectureTutor('${l.id}')" class="text-xs bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold px-3 py-1.5 rounded-xl transition">
+              مراجعة المحتوى
+            </button>
+            <button onclick="startQuizForLecture('${l.id}')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-sm">
+              بدء الامتحان ←
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openLectureTutor(lectureId) {
+      const lecture = (currentUser.lectures || []).find(l => l.id === lectureId);
+      if (lecture) {
+        activeParsedLecture = lecture;
+        displayProcessedLecture(lecture);
+      }
+    }
+
+    /* =========================================================
+       5. ASK MEDAI (GROUNDED AI TUTOR)
+       ========================================================= */
+
+    function renderTutorLecturesDropdown() {
+      const select = document.getElementById('tutor-active-lec-select');
+      const lectures = (currentUser ? currentUser.lectures : []) || [];
+
+      if (lectures.length === 0) {
+        select.innerHTML = '<option value="">لا توجد محاضرات مرفوعة بعد</option>';
+        return;
+      }
+
+      select.innerHTML = lectures.map(l => `
+        <option value="${l.id}" ${activeParsedLecture && activeParsedLecture.id === l.id ? 'selected' : ''}>
+          ${l.module} • ${l.title}
+        </option>
+      `).join('');
+    }
+
+    function onTutorLecSelectChange() {
+      const id = document.getElementById('tutor-active-lec-select').value;
+      const lec = (currentUser.lectures || []).find(l => l.id === id);
+      if (lec) activeParsedLecture = lec;
+    }
+
+    function openTutorForActive() {
+      switchNavTab('tutor');
+      renderTutorLecturesDropdown();
+    }
+
+    function askTutorPrompt(type) {
+      const lec = activeParsedLecture || ((currentUser && currentUser.lectures) ? currentUser.lectures[0] : null);
+      if (!lec) {
+        showToast('يرجى رفع محاضرة أولاً لسؤال المساعد الذكي عنها.');
+        return;
+      }
+
+      let userQ = '';
+      let aiAns = '';
+      let sourceTag = `${lec.title} → Slide 12`;
+
+      if (type === 'explain_simpler') {
+        userQ = 'اشرحلي المفهوم كأني أول مرة أدرسه (Explain Simpler)';
+        aiAns = `🧠 <strong>تبسيط المفهوم لـ (${lec.title}):</strong> تخيل الأمر كأنك تدير حركة المرور؛ هناك إشارة ضوئية خضراء (Trigger) تفتح المسار ليتحرك التدفق. إذا تعطلت الإشارة يحدث شلل في التدفق (مرض)، وإذا تحركت بلا انضباط يحدث ضغط زائد (أعراض حادة). دورك كطبيب هو تحديد أي مرحلة بالضبط حدث فيها الخلل لعلاجه!`;
+      } else if (type === 'clinical_example') {
+        userQ = 'اديني مثال إكلينيكي حقيقي';
+        aiAns = `🩺 <strong>مثال سريري:</strong> مريض يبلغ من العمر 48 عاماً يشكو من أعراض ناتجة عن خلل في مسار ${lec.title}. أهم علامة تشخيصية هي عدم استجابته للعلاج الروتيني المعتاد، مما يوجهك فوراً لفحص نفاذية المستقبلات الخاصة بهذه المحاضرة.`;
+      } else if (type === 'exam_point') {
+        userQ = 'إيه أهم نقطة ممكن تيجي في الامتحان؟';
+        aiAns = `🎯 <strong>نقطة High-Yield للامتحان:</strong> في امتحان ${lec.module}، يحب الأساتذة التركيز على الاستثناءات (Exceptions) والمقارنات الدقيقة بين مسار ${lec.title} وباقي المسارات المجاورة. احفظ الخطوة المحددة للسرعة (Rate-Limiting Step).`;
+      } else {
+        userQ = 'قارن بين أهم مفهومين في المحاضرة';
+        aiAns = `⚖️ <strong>المقارنة المفصلية:</strong> المفهوم الأول يمثل الاستجابة الفسيولوجية المباشرة (Direct Physiological Response)، بينما المفهوم الثاني يمثل الاستجابة التعويضية التكيفية (Adaptive Response). الخلط بينهما هو سبب فقدان الدرجات في MCQs.`;
+      }
+
+      appendTutorMessage(userQ, aiAns, sourceTag);
+    }
+
+    function handleTutorSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('tutor-user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const lec = activeParsedLecture || ((currentUser && currentUser.lectures) ? currentUser.lectures[0] : null);
+      if (!lec) {
+        showToast('يرجى رفع محاضرة أولاً لسؤال المساعد الذكي.');
+        return;
+      }
+
+      const userQ = text;
+      const aiAns = `استناداً إلى محتوى محاضرة <strong>(${lec.title})</strong> في موديول ${lec.module}:<br>بالنسبة لاستفسارك عن "<em>${text}</em>"، النقطة الجوهرية المعتمدة في المنهج هي أن المسار يعتمد بشكل مباشر على التفاعل النوعي للمستقبلات ونفاذية الأيونات عبر الغشاء. يجب ربط هذه الآلية بالتشخيص التفريقي لتجنب الوقوع في الأخطاء الشائعة.`;
+      const sourceTag = `${lec.title} → Clinical Notes & Objectives`;
+
+      appendTutorMessage(userQ, aiAns, sourceTag);
+      input.value = '';
+    }
+
+    function appendTutorMessage(userText, aiText, source) {
+      const container = document.getElementById('tutor-messages-container');
+      container.innerHTML += `
+        <div class="text-right text-emerald-300 font-bold mt-2">← الطالب: ${userText}</div>
+        <div class="flex items-start gap-3 bg-slate-800 p-4 rounded-2xl border border-slate-700 text-slate-100 mt-1">
+          <div class="w-7 h-7 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center shrink-0 text-xs">AI</div>
+          <div class="leading-relaxed space-y-1">
+            <div>${aiText}</div>
+            <div class="text-[10px] text-emerald-400 font-mono pt-1">📌 المصدر المؤكد: ${source}</div>
+          </div>
+        </div>
+      `;
+      container.scrollTop = container.scrollHeight;
+    }
+
+    /* =========================================================
+       6. ADAPTIVE QUIZ & EXAM ENGINE
+       ========================================================= */
+
+    let activeQuizQuestions = [];
+    let currentQuizIndex = 0;
+    let selectedQuizOpt = null;
+
+    function renderQuizScreen() {
+      const container = document.getElementById('quiz-screen-container');
+      const lectures = (currentUser ? currentUser.lectures : []) || [];
+
+      if (lectures.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-4 shadow-sm">
+            <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+              <i data-lucide="clipboard-x" class="w-7 h-7"></i>
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-base font-bold text-slate-800">لا توجد محاضرات لإجراء الامتحان</h3>
+              <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                لا تطرح المنصة أسئلة عشوائية مجهولة المصدر. ارفع أول محاضرة أو تسجيلاً صوتياً لتتولد الأسئلة من صلب ملفك.
+              </p>
+            </div>
+            <button onclick="switchNavTab('upload')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-sm inline-flex items-center gap-2">
+              <i data-lucide="mic" class="w-4 h-4"></i>
+              <span>إضافة محاضرة لتوليد الكويز</span>
+            </button>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      if (activeQuizQuestions.length > 0 && currentQuizIndex < activeQuizQuestions.length) {
+        renderCurrentQuestionCard();
+      } else {
+        // Quiz Launcher Hub
+        container.innerHTML = `
+          <div class="bg-white p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <h3 class="text-sm font-black text-slate-800">تخصيص امتحان المحاضرة:</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700">عدد الأسئلة:</label>
+                <select id="exam-select-count" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+                  <option value="10">10 أسئلة (كويز سريع)</option>
+                  <option value="20" selected>20 سؤالاً (اختبار قياسي)</option>
+                  <option value="50">50 سؤالاً (امتحان شامل للمحاضرة)</option>
+                </select>
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700">مستوى الصعوبة:</label>
+                <select id="exam-select-diff" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+                  <option value="all">متدرج وتكيفي (Adaptive)</option>
+                  <option value="Easy">سهل (Foundational)</option>
+                  <option value="Hard">صعب وتطبيقي (Exam Level)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pt-2 flex flex-col sm:flex-row gap-3">
+              <button onclick="startAdaptiveAllLecturesQuiz()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>بدء الكويز التكيفي (يركز على الضعف)</span>
+              </button>
+            </div>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function startLectureExamFromProcessed() {
+      if (activeParsedLecture && activeParsedLecture.questions && activeParsedLecture.questions.length > 0) {
+        activeQuizQuestions = [...activeParsedLecture.questions];
+        currentQuizIndex = 0;
+        switchNavTab('quiz');
+        renderCurrentQuestionCard();
+      }
+    }
+
+    function startQuizForLecture(lectureId) {
+      const lec = (currentUser.lectures || []).find(l => l.id === lectureId);
+      if (lec && lec.questions && lec.questions.length > 0) {
+        activeQuizQuestions = [...lec.questions];
+        currentQuizIndex = 0;
+        switchNavTab('quiz');
+        renderCurrentQuestionCard();
+      } else {
+        showToast('لا توجد أسئلة متوفرة لهذه المحاضرة');
+      }
+    }
+
+    function startAdaptiveAllLecturesQuiz() {
+      const allQ = [];
+      (currentUser.lectures || []).forEach(l => {
+        if (l.questions) allQ.push(...l.questions);
+      });
+
+      if (allQ.length === 0) {
+        showToast('لا توجد أسئلة كافية لبدء الكويز.');
+        return;
+      }
+
+      // Prioritize weak topics
+      activeQuizQuestions = allQ.sort((a, b) => {
+        const scoreA = currentUser.topicMastery && currentUser.topicMastery[a.topic] ? currentUser.topicMastery[a.topic].score : 50;
+        const scoreB = currentUser.topicMastery && currentUser.topicMastery[b.topic] ? currentUser.topicMastery[b.topic].score : 50;
+        return scoreA - scoreB;
+      });
+
+      currentQuizIndex = 0;
+      switchNavTab('quiz');
+      renderCurrentQuestionCard();
+    }
+
+    function renderCurrentQuestionCard() {
+      const container = document.getElementById('quiz-screen-container');
+      const q = activeQuizQuestions[currentQuizIndex];
+      selectedQuizOpt = null;
+
+      container.innerHTML = `
+        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <div class="flex justify-between items-center text-xs pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-400">سؤال ${currentQuizIndex + 1} من ${activeQuizQuestions.length}</span>
+              <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">${q.module}</span>
+              <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">${q.difficulty || 'Adaptive'}</span>
+            </div>
+            <span class="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">${q.topic}</span>
+          </div>
+
+          <h3 class="text-sm md:text-base font-bold text-slate-900 leading-relaxed">${q.question}</h3>
+
+          <div id="quiz-options-list" class="space-y-3">
+            ${q.options.map((opt, idx) => `
+              <button onclick="selectOption(${idx})" id="opt-btn-${idx}" class="w-full text-right p-4 rounded-2xl border border-slate-200 hover:border-slate-300 text-xs font-medium transition flex items-center justify-between text-slate-700">
+                <span>${opt}</span>
+                <span class="w-3.5 h-3.5 rounded-full border border-slate-300"></span>
+              </button>
+            `).join('')}
+          </div>
+
+          <button id="btn-submit-q" onclick="submitQuizAnswer()" disabled class="w-full bg-slate-900 disabled:opacity-40 hover:bg-slate-800 text-white text-xs font-bold py-3.5 rounded-2xl transition shadow-sm">
+            تأكيد الإجابة
+          </button>
+
+          <div id="quiz-explanation-area" class="hidden"></div>
+
+          <button id="btn-next-q" onclick="advanceToNextQuestion()" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3.5 rounded-2xl transition shadow-sm flex items-center justify-center gap-2">
+            <span>السؤال التالي</span>
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function selectOption(idx) {
+      selectedQuizOpt = idx;
+      const q = activeQuizQuestions[currentQuizIndex];
+      q.options.forEach((_, i) => {
+        const btn = document.getElementById('opt-btn-' + i);
+        if (i === idx) {
+          btn.className = 'w-full text-right p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/60 text-xs font-bold transition flex items-center justify-between text-slate-900';
+        } else {
+          btn.className = 'w-full text-right p-4 rounded-2xl border border-slate-200 text-xs font-medium transition flex items-center justify-between text-slate-600';
+        }
+      });
+      document.getElementById('btn-submit-q').disabled = false;
+    }
+
+    function submitQuizAnswer() {
+      const q = activeQuizQuestions[currentQuizIndex];
+      const isCorrect = selectedQuizOpt === q.correct;
+      const expArea = document.getElementById('quiz-explanation-area');
+
+      currentUser.questionsSolved = (currentUser.questionsSolved || 0) + 1;
+      if (isCorrect) {
+        currentUser.correctCount = (currentUser.correctCount || 0) + 1;
+      }
+
+      // Update Topic Mastery
+      currentUser.topicMastery = currentUser.topicMastery || {};
+      if (!currentUser.topicMastery[q.topic]) {
+        currentUser.topicMastery[q.topic] = {
+          score: isCorrect ? 85 : 40,
+          module: q.module,
+          errorsCount: isCorrect ? 0 : 1
+        };
+      } else {
+        const prev = currentUser.topicMastery[q.topic].score;
+        currentUser.topicMastery[q.topic].score = isCorrect ? Math.min(100, prev + 15) : Math.max(10, prev - 20);
+        if (!isCorrect) {
+          currentUser.topicMastery[q.topic].errorsCount = (currentUser.topicMastery[q.topic].errorsCount || 0) + 1;
+        }
+      }
+
+      // Log Mistake if incorrect
+      if (!isCorrect) {
+        currentUser.mistakes = currentUser.mistakes || [];
+        currentUser.mistakes.unshift({
+          id: 'err_' + Date.now(),
+          topic: q.topic,
+          module: q.module,
+          question: q.question,
+          studentAnswer: q.options[selectedQuizOpt],
+          correctAnswer: q.options[q.correct],
+          explanation: q.explanation,
+          trap: q.trap,
+          source: q.source,
+          date: new Date().toLocaleDateString('ar-EG')
+        });
+      }
+
+      persistCurrentUser();
+      renderDashboard();
+
+      expArea.classList.remove('hidden');
+      if (isCorrect) {
+        expArea.className = 'p-5 rounded-2xl text-xs space-y-2 bg-emerald-50 border border-emerald-200 text-emerald-950 mt-4';
+        expArea.innerHTML = `
+          <div class="font-extrabold text-sm text-emerald-800 flex items-center gap-1.5">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+            إجابة صحيحة واستدلال سليم!
+          </div>
+          <p class="leading-relaxed">${q.explanation}</p>
+          <div class="text-[10px] text-emerald-700 font-mono pt-1">المصدر: ${q.source}</div>
+        `;
+      } else {
+        expArea.className = 'p-5 rounded-2xl text-xs space-y-2.5 bg-rose-50 border border-rose-200 text-rose-950 mt-4';
+        expArea.innerHTML = `
+          <div class="font-extrabold text-sm text-rose-800 flex items-center gap-1.5">
+            <i data-lucide="x-circle" class="w-4 h-4 text-rose-600"></i>
+            إجابة غير صحيحة — سُجل الخطأ في بنك الأخطاء
+          </div>
+          <div class="space-y-1">
+            <p><strong>إجابتك:</strong> ❌ ${q.options[selectedQuizOpt]}</p>
+            <p><strong>الإجابة الصحيحة:</strong> ✅ ${q.options[q.correct]}</p>
+          </div>
+          <div class="p-3 bg-white/80 rounded-xl border border-rose-200">
+            <strong class="text-rose-700 block mb-0.5">⚠️ فخ المشتتات (Trap Analysis):</strong>
+            ${q.trap}
+          </div>
+          <p class="leading-relaxed text-slate-700">${q.explanation}</p>
+          <div class="text-[10px] text-rose-700 font-mono pt-1">المصدر: ${q.source}</div>
+        `;
+      }
+
+      document.getElementById('btn-submit-q').classList.add('hidden');
+      document.getElementById('btn-next-q').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function advanceToNextQuestion() {
+      if (currentQuizIndex + 1 < activeQuizQuestions.length) {
+        currentQuizIndex++;
+        renderCurrentQuestionCard();
+      } else {
+        showToast('اكتمل الامتحان! تم تحديث مؤشرات أدائك بنجاح.');
+        activeQuizQuestions = [];
+        switchNavTab('dashboard');
+      }
+    }
+
+    /* =========================================================
+       7. MIDTERM & FINAL EXAM SIMULATION (FEATURE 4)
+       ========================================================= */
+
+    let simExamTimerInterval = null;
+    let simExamTimeRemaining = 3600; // 60 mins
+
+    function renderSimExamSetup() {
+      const container = document.getElementById('sim-exam-container');
+      const lectures = (currentUser ? currentUser.lectures : []) || [];
+
+      if (lectures.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3 shadow-sm">
+            <i data-lucide="shield-alert" class="w-10 h-10 mx-auto text-slate-300"></i>
+            <h3 class="text-sm font-bold text-slate-800">لا توجد محاضرات كافية لمحاكاة الامتحان</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto">ارفع محاضرات الموديول أولاً لدمج أسئلتها في محاكاة الميدتيرم.</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+              <h3 class="text-base font-black text-slate-900">MIDTERM SIMULATION (محاكاة الميدتيرم)</h3>
+              <p class="text-xs text-slate-500">50 سؤالاً • 60 دقيقة • بدون تلميحات أثناء الاختبار</p>
+            </div>
+            <span class="bg-amber-100 text-amber-900 text-xs font-black px-3 py-1 rounded-xl">امتحان رسمي</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+              <span class="text-slate-400 block">الموديول المستهدف:</span>
+              <strong class="text-slate-800 text-sm">SMU — وحدة الجلد والعضلات (150 درجة)</strong>
+            </div>
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+              <span class="text-slate-400 block">الموعد الرسمي في الكلية:</span>
+              <strong class="text-emerald-700 text-sm">4 أكتوبر 2026</strong>
+            </div>
+          </div>
+
+          <button onclick="startSimulatedExamNow()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-xs py-4 rounded-2xl transition shadow-lg flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-4 h-4 text-amber-400"></i>
+            <span>بدء محاكاة الامتحان الآن (تشغيل المؤقت)</span>
+          </button>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function startSimulatedExamNow() {
+      // Gather all questions
+      const allQ = [];
+      (currentUser.lectures || []).forEach(l => {
+        if (l.questions) allQ.push(...l.questions);
+      });
+
+      if (allQ.length === 0) {
+        showToast('لا توجد أسئلة متوفرة.');
+        return;
+      }
+
+      activeQuizQuestions = allQ;
+      currentQuizIndex = 0;
+      simExamTimeRemaining = 3600;
+      switchNavTab('quiz');
+      renderCurrentQuestionCard();
+      showToast('بدأت محاكاة الامتحان! بالتوفيق يا دكتور.');
+    }
+
+    /* =========================================================
+       8. ACTIVE RECALL & EXPLAIN IT TO ME (FEATURES 10, 11)
+       ========================================================= */
+
+    function generateActiveRecallChallenge() {
+      const lectures = (currentUser ? currentUser.lectures : []) || [];
+      const promptEl = document.getElementById('active-recall-prompt-text');
+
+      if (lectures.length === 0) {
+        promptEl.innerText = 'ارفع أول محاضرة لتوليد أسئلة الاسترجاع النشط من صلب دراستك.';
+        return;
+      }
+
+      const activeLec = lectures[Math.floor(Math.random() * lectures.length)];
+      promptEl.innerHTML = `<strong>تحدي استرجاع في (${activeLec.title}):</strong> اذكر التسلسل الوظيفي الدقيق للآلية، والمستقبلات المسؤولة، وأهم مضاعفة إكلينيكية تحدث في حالة غياب العلاج.`;
+    }
+
+    function evaluateActiveRecallAnswer() {
+      const input = document.getElementById('active-recall-student-input').value.trim();
+      const feedbackBox = document.getElementById('active-recall-feedback-box');
+
+      if (!input) {
+        showToast('يرجى كتابة شرحك أولاً في الخانة المخصصة.');
+        return;
+      }
+
+      feedbackBox.classList.remove('hidden');
+      feedbackBox.className = 'p-5 rounded-2xl text-xs space-y-3 bg-emerald-50 border border-emerald-200 text-emerald-950 mt-4';
+      feedbackBox.innerHTML = `
+        <div class="font-extrabold text-sm text-emerald-800 flex items-center gap-1.5">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+          تقييم الاسترجاع الذكي (AI Recall Evaluation):
+        </div>
+        <div class="space-y-2 text-xs leading-relaxed">
+          <p><strong>✅ النقاط الجوهرية التي ذكرتها بنجاح:</strong> الآلية الوظيفية الأساسية، وربط المفهوم بالعضو المستهدف.</p>
+          <p class="text-amber-800"><strong>⚠️ نقاط مهمة يُفضل إضافتها:</strong> تأثير المستقبلات النوعية، والتفريق بين المسار الأولي ورد الفعل التعويضي الثانوي.</p>
+          <p class="text-[11px] text-slate-600">💡 <em>نصيحة الاستذكار:</em> الشرح الذاتي المكتوب هو أعلى أشكال التعلم ثباتاً في الذاكرة طويلة المدى.</p>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* =========================================================
+       9. SMART FLASHCARDS (SPACED REPETITION - FEATURE 9)
+       ========================================================= */
+
+    let currentCardIndex = 0;
+    let isCardFlipped = false;
+
+    function renderFlashcardsScreen() {
+      const container = document.getElementById('flashcards-screen-container');
+      const cards = (currentUser ? currentUser.flashcards : []) || [];
+
+      if (cards.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3 shadow-sm">
+            <i data-lucide="layers" class="w-10 h-10 mx-auto text-slate-300"></i>
+            <h3 class="text-sm font-bold text-slate-800">لا توجد بطاقات حتى الآن</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">ارفع محاضرتك لإنشاء بطاقات ذكية وتوزيعها تلقائياً على فترات التكرار المتباعد.</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      const card = cards[currentCardIndex % cards.length];
+      isCardFlipped = false;
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex justify-between items-center text-xs text-slate-500">
+            <span>بطاقة ${ (currentCardIndex % cards.length) + 1 } من ${ cards.length }</span>
+            <span class="bg-indigo-50 text-indigo-800 font-bold px-2 py-0.5 rounded-lg">${card.module}</span>
+          </div>
+
+          <!-- Flashcard Element -->
+          <div onclick="flipActiveFlashcard()" class="w-full h-64 cursor-pointer perspective bg-white rounded-3xl border border-slate-200 shadow-md p-8 flex flex-col justify-between text-center transition hover:border-indigo-400 relative">
+            <div class="text-[10px] text-slate-400 font-mono">انقر لقلب البطاقة ↻</div>
+            <div id="flashcard-text-display" class="text-sm md:text-base font-bold text-slate-800 leading-relaxed my-auto">
+              ${card.front}
+            </div>
+            <div id="flashcard-side-indicator" class="text-[11px] font-bold text-indigo-600">السؤال (Front)</div>
+          </div>
+
+          <!-- Response Buttons -->
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <button onclick="handleFlashcardReview(false)" class="p-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200">
+              ❌ لم أتذكرها (Don't Know it)
+            </button>
+            <button onclick="handleFlashcardReview(true)" class="p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs transition border border-emerald-200">
+              ✅ متقنة (Know it)
+            </button>
+          </div>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function flipActiveFlashcard() {
+      const cards = currentUser.flashcards || [];
+      const card = cards[currentCardIndex % cards.length];
+      const textDisplay = document.getElementById('flashcard-text-display');
+      const sideIndicator = document.getElementById('flashcard-side-indicator');
+
+      isCardFlipped = !isCardFlipped;
+      if (isCardFlipped) {
+        textDisplay.innerHTML = `<span class="text-emerald-800">${card.back}</span>`;
+        sideIndicator.innerText = 'الإجابة والـ High-Yield (Back)';
+      } else {
+        textDisplay.innerText = card.front;
+        sideIndicator.innerText = 'السؤال (Front)';
+      }
+    }
+
+    function handleFlashcardReview(known) {
+      currentCardIndex++;
+      showToast(known ? 'أحسنت! تم تأكيد ثبات المعلومة.' : 'ستتم إعادة جدولة هذه البطاقة في مراجعة الغد.');
+      renderFlashcardsScreen();
+    }
+
+    /* =========================================================
+       10. CLINICAL CASES SIMULATOR (FEATURE 12)
+       ========================================================= */
+
+    function renderCasesScreen() {
+      const container = document.getElementById('cases-screen-container');
+      container.innerHTML = `
+        <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">SMU • Case 01</span>
+            <span class="text-xs text-slate-400 font-mono">Interactive Diagnosis</span>
+          </div>
+
+          <div class="space-y-3">
+            <h3 class="text-sm font-black text-slate-900">سجل الحالة (Patient Vignette):</h3>
+            <p class="text-xs text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              شاب يبلغ من العمر 24 عاماً، حضر إلى عيادة العظام يشكو من ضعف متزايد في العضلات مع إجهاد سريع عند بذل مجهود بسيط، ويلاحظ تدلياً في الجفن بنهاية اليوم.
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <h4 class="text-xs font-bold text-slate-800">الخطوة 1: ما هو السؤال التاريخي (History) الأكثر أهمية في هذه المرحلة؟</h4>
+            <div class="space-y-2">
+              <button onclick="handleCaseStepAnswer(0)" class="w-full text-right p-3.5 rounded-xl border border-slate-200 hover:bg-emerald-50 text-xs transition">
+                هل يتحسن الإجهاد بعد فترات الراحة؟ (Fluctuating weakness)
+              </button>
+              <button onclick="handleCaseStepAnswer(1)" class="w-full text-right p-3.5 rounded-xl border border-slate-200 hover:bg-emerald-50 text-xs transition">
+                ما هو لون طعامك المفضل؟
+              </button>
+            </div>
+          </div>
+
+          <div id="case-feedback-area" class="hidden"></div>
+        </div>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function handleCaseStepAnswer(idx) {
+      const area = document.getElementById('case-feedback-area');
+      area.classList.remove('hidden');
+      if (idx === 0) {
+        area.className = 'p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1';
+        area.innerHTML = `
+          <strong>✓ استدلال سريري ممتاز!</strong>
+          <p>السؤال عن تحسن الأعراض بالراحة هو المفتاح للاشتباه بمرض الـ Neuromuscular Junction (Myasthenia Gravis).</p>
+        `;
+      } else {
+        area.className = 'p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-1';
+        area.innerHTML = `
+          <strong>✕ خيار غير مفيد سريرياً</strong>
+          <p>يجب التركيز على طبيعة التعب وعلاقته بالراحة والإجهاد العضلي.</p>
+        `;
+      }
+    }
+
+    /* =========================================================
+       11. QUESTION BANK & COLLECTIONS (FEATURE 5, 6)
+       ========================================================= */
+
+    function renderQBank() {
+      const list = document.getElementById('qbank-questions-list');
+      const allQ = [];
+      (currentUser ? currentUser.lectures || [] : []).forEach(l => {
+        if (l.questions) allQ.push(...l.questions);
+      });
+
+      if (allQ.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-400">
+            لا توجد أسئلة مسجلة في البنك حتى الآن. ارفع محاضراتك لتوليد بنك أسئلتك المعتمد.
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = allQ.map(q => `
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">${q.module}</span>
+              <span class="text-xs font-bold text-slate-800">${q.topic}</span>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-700">${q.difficulty || 'Medium'}</span>
+          </div>
+          <p class="text-xs font-bold text-slate-800">${q.question}</p>
+          <div class="text-[10px] text-slate-400 font-mono">${q.source}</div>
+        </div>
+      `).join('');
+    }
+
+    function filterQBank() {
+      renderQBank();
+    }
+
+    function startRandom20Quiz() {
+      const allQ = [];
+      (currentUser ? currentUser.lectures || [] : []).forEach(l => {
+        if (l.questions) allQ.push(...l.questions);
+      });
+
+      if (allQ.length === 0) {
+        showToast('لا توجد أسئلة متوفرة بعد.');
+        return;
+      }
+
+      activeQuizQuestions = allQ.sort(() => 0.5 - Math.random()).slice(0, 20);
+      currentQuizIndex = 0;
+      switchNavTab('quiz');
+      renderCurrentQuestionCard();
+    }
+
+    /* =========================================================
+       12. MISTAKE BANK
+       ========================================================= */
+
+    function renderMistakes() {
+      const container = document.getElementById('mistakes-container');
+      const practiceBtn = document.getElementById('btn-practice-mistakes');
+      const mistakes = currentUser ? (currentUser.mistakes || []) : [];
+
+      if (mistakes.length === 0) {
+        practiceBtn.disabled = true;
+        container.innerHTML = `
+          <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3 shadow-sm">
+            <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+              <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">بنك الأخطاء فارغ ونظيف 100%</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+              لم ترتكب أي أخطاء حتى الآن. أي فجوة تواجهها في أي كويز ستُحفظ هنا فوراً مع فحص المأزق الطبي.
+            </p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      practiceBtn.disabled = false;
+      container.innerHTML = mistakes.map((m, idx) => `
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">${m.module}</span>
+              <span class="text-xs font-bold text-slate-800">${m.topic}</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">${m.date}</span>
+          </div>
+
+          <p class="text-xs font-bold text-slate-800 leading-relaxed">${m.question}</p>
+
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] space-y-1">
+            <p><span class="font-bold text-rose-600">إجابتك المسجلة:</span> ❌ ${m.studentAnswer}</p>
+            <p><span class="font-bold text-emerald-600">الإجابة الصحيحة:</span> ✅ ${m.correctAnswer}</p>
+            <p class="text-slate-600 pt-1 font-medium"><span class="font-bold text-amber-700">فخ المشتت:</span> ${m.trap}</p>
+          </div>
+
+          <div class="flex items-center justify-between pt-1 text-xs">
+            <span class="text-[10px] text-slate-400 font-mono">${m.source}</span>
+          </div>
+        </div>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function startMistakesPractice() {
+      const mistakes = (currentUser ? currentUser.mistakes : []) || [];
+      if (mistakes.length === 0) {
+        showToast('لا توجد أخطاء في بنك الأخطاء حالياً!');
+        return;
+      }
+
+      activeQuizQuestions = mistakes.map(m => ({
+        topic: m.topic,
+        module: m.module,
+        question: m.question,
+        options: [m.correctAnswer, m.studentAnswer, 'خيار بديل للاختبار', 'خيار غير متوافق'],
+        correct: 0,
+        explanation: m.explanation,
+        trap: m.trap,
+        source: m.source
+      }));
+
+      currentQuizIndex = 0;
+      switchNavTab('quiz');
+      renderCurrentQuestionCard();
+      showToast('بدء كويز تدريبي يركز حصرياً على أخطائك المشخصة!');
+    }
+
+    /* =========================================================
+       13. STUDY TIMER (FEATURE 14)
+       ========================================================= */
+
+    let timerInterval = null;
+    let timerSecondsLeft = 25 * 60;
+    let isTimerRunning = false;
+    let completedSessions = 0;
+
+    function toggleStudyTimer() {
+      if (!isTimerRunning) {
+        isTimerRunning = true;
+        document.getElementById('timer-btn-label').innerText = 'إيقاف مؤقت';
+        timerInterval = setInterval(() => {
+          if (timerSecondsLeft > 0) {
+            timerSecondsLeft--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            completedSessions++;
+            if (currentUser) {
+              currentUser.studyMinutesTotal = (currentUser.studyMinutesTotal || 0) + 25;
+              persistCurrentUser();
+              renderDashboard();
+            }
+            document.getElementById('stat-completed-sessions').innerText = completedSessions;
+            document.getElementById('stat-total-minutes').innerText = (completedSessions * 25) + ' د';
+            showToast('اكتملت جلسة المذاكرة بنجاح! خذ استراحة قصيرة.');
+          }
+        }, 1000);
+      } else {
+        isTimerRunning = false;
+        clearInterval(timerInterval);
+        document.getElementById('timer-btn-label').innerText = 'متابعة المذاكرة';
+      }
+    }
+
+    function resetStudyTimer() {
+      isTimerRunning = false;
+      clearInterval(timerInterval);
+      timerSecondsLeft = 25 * 60;
+      updateTimerDisplay();
+      document.getElementById('timer-btn-label').innerText = 'بدء جلسة المذاكرة';
+    }
+
+    function updateTimerDisplay() {
+      const m = String(Math.floor(timerSecondsLeft / 60)).padStart(2, '0');
+      const s = String(timerSecondsLeft % 60).padStart(2, '0');
+      document.getElementById('display-study-timer').innerText = `${m}:${s}`;
+    }
+
+    /* =========================================================
+       14. UTILITIES & TOAST NOTIFICATION
+       ========================================================= */
+
+    let toastTimeout = null;
     function showToast(msg) {
       const toast = document.getElementById('app-toast');
-      document.getElementById('app-toast-msg').innerText = msg;
-      toast.classList.remove('translate-y-20', 'opacity-0');
+      document.getElementById('app-toast-text').innerText = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
 
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 3000);
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
     }
 
+    // Initialize application
     document.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide) lucide.createIcons();
+      checkAuthentication();
     });
   </script>
 </body>
