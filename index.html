@@ -2681,6 +2681,77 @@
     document.addEventListener('DOMContentLoaded', () => {
       checkAuthentication();
     });
-  </script>
+  </script// ==========================================
+// SVNU YEAR 2 - TARGETED HARVESTED DATA
+// ==========================================
+window.MEDAI_SVNU_BLOCKS = {
+  SMU: {
+    title: "Skin & Musculoskeletal",
+    lectures: [
+      { title: "Muscles of Upper Limb - Lec 1", file: "fr anatomy lecture.mp3" },
+      { title: "Muscles of Upper Limb - Lec 2", file: "Voice 001.m4a" }
+    ],
+    cases: [
+      {
+        question: "45yo woman with symmetric proximal muscle weakness, elevated CK, positive ANA, myopathic EMG, no rash.",
+        diagnosis: "Polymyositis",
+        confirmatory: "Muscle Biopsy"
+      },
+      {
+        question: "62yo woman with proximal limb weakness, heliotrope rash around eyes, Gottron's papules on fingers.",
+        diagnosis: "Dermatomyositis"
+      }
+    ],
+    highYield: [
+      "Carpal tunnel under flexor retinaculum is the most common median nerve entrapment site.",
+      "Defect in adhesion: Bernard-Soulier (GpIb) | Defect in aggregation: Glanzmann (GpIIb/IIIa).",
+      "Henoch-Schönlein Purpura: Most common pediatric vasculitis, IgA-mediated, normal platelets."
+    ]
+  },
+  GIT: {
+    title: "Gastrointestinal Tract",
+    topics: [
+      {
+        condition: "Wilson's Disease",
+        keyPoints: "Copper accumulation in basal ganglia and liver; Kayser-Fleischer rings; low ceruloplasmin; high liver copper; Treat: Penicillamine / Zinc."
+      }
+    ],
+    cases: [
+      {
+        question: "28yo male with ascending weakness and absent reflexes 2 weeks post gastroenteritis, developing dyspnea.",
+        diagnosis: "Guillain-Barré Syndrome",
+        nextStep: "Check Forced Vital Capacity (FVC) to secure airway, then IVIG / Plasmapheresis."
+      }
+    ]
+  },
+  Urinary: {
+    title: "Renal & Urinary",
+    comparisons: {
+      wilmsVsNeuroblastoma: {
+        wilms: "Confined to flank, does not cross midline, hematuria, managed by partial nephrectomy if bilateral/solitary.",
+        neuroblastoma: "Crosses midline, irregular hard abdominal mass, elevated urinary VMA & HVA, proptosis."
+      }
+    },
+    writtenPrompts: [
+      "Nephrotic Syndrome diagnostic criteria and management.",
+      "Congenital Adrenal Hyperplasia (CAH) types and DSD investigations."
+    ]
+  },
+  ECE2: {
+    title: "Clinical Experience 2",
+    cases: [
+      {
+        question: "30yo woman with fatigable ptosis and diplopia improving with ice pack, positive AChR antibodies.",
+        diagnosis: "Myasthenia Gravis",
+        firstLineTx: "Pyridostigmine (Oral acetylcholinesterase inhibitor)"
+      }
+    ],
+    pharmacology: [
+      "Amantadine in Parkinsonism: Enhances dopamine release, reduces reuptake, NMDA antagonist, mainly treats bradykinesia and rigidity.",
+      "Generalized Dystonia ladder: Levodopa trial -> Anticholinergics (Benztropine) -> Benzodiazepines -> Local Botox for focal."
+    ]
+  }
+};
+console.log("✓ MedAI SVNU Modules Dataset Attached Successfully:", Object.keys(window.MEDAI_SVNU_BLOCKS));>
 </body>
 </html>
