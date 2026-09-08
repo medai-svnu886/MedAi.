@@ -2750,7 +2750,46 @@ pharmacology: [
       "Amantadine in Parkinsonism: Enhances dopamine release, reduces reuptake, NMDA antagonist, mainly treats bradykinesia and rigidity.",
       "Generalized Dystonia ladder: Levodopa trial ->
   }
-};
+}; 
+// دالة بناء وعرض كروت البلوكات الأربعة في واجهة المنصة
+function renderSVNUHarvestedModules() {
+  const container = document.querySelector('.main-content') || document.querySelector('main') || document.body;
+  if (!container || !window.MEDAI_SVNU_BLOCKS) return;
+
+  const section = document.createElement('div');
+  section.id = 'svnu-automated-section';
+  section.style.cssText = 'margin: 25px auto; max-width: 1100px; padding: 20px; background: rgba(17, 24, 39, 0.95); border: 1px solid #1f2937; border-radius: 14px; direction: rtl; color: #fff;';
+
+  let html = '<h2 style="font-size: 1.3rem; margin-bottom: 15px; color: #38bdf8; display:flex; align-items:center; gap:8px;">📚 محتوى البلوكات المستخرج آلياً (SVNU Year 2)</h2>';
+  html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">';
+
+  for (const [key, mod] of Object.entries(window.MEDAI_SVNU_BLOCKS)) {
+    html += `
+      <div style="background: #111827; border: 1px solid #374151; border-radius: 10px; padding: 15px;">
+        <span style="background: #2563eb; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">${key}</span>
+        <h3 style="font-size: 1rem; margin: 10px 0 6px;">${mod.title}</h3>
+        <p style="font-size: 0.85rem; color: #9ca3af;">
+          ${mod.lectures ? `🎙️ تسجيلات: ${mod.lectures.length}<br>` : ''}
+          ${mod.cases ? `🩺 حالات سريرية: ${mod.cases.length}<br>` : ''}
+          ${mod.highYield ? `⚡ نقاط امتحانية: ${mod.highYield.length}` : ''}
+          ${mod.topics ? `🧪 موضوعات: ${mod.topics.length}` : ''}
+          ${mod.comparisons ? `⚖️ مقارنات أورام متاحة` : ''}
+        </p>
+      </div>
+    `;
+  }
+
+  html += '</div>';
+  section.innerHTML = html;
+  container.prepend(section);
+}
+
+// تشغيل العرض تلقائياً بعد تحميل الصفحة
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderSVNUHarvestedModules);
+} else {
+  renderSVNUHarvestedModules();
+}
 </script>
 </body>
 </html>
